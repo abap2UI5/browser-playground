@@ -3,7 +3,7 @@
 // The View tab shows the XML a builder chain produces. This is what happens
 // when somebody edits that XML: the chain is read back out of the ABAP
 // (chain-read.mjs), the edited document is matched against the one that was
-// shown, and the chain is written again (chain-write.mjs) with the ABAP the
+// shown, and the chain is written again (the linter's chain writer, src/vendor/linter/) with the ABAP the
 // editor did not touch left exactly as it was.
 //
 // That last part is the whole design. A view is full of expressions -
@@ -28,7 +28,7 @@
 // the diff is the change - a leaf control taken out included. Writing the
 // whole chain is what an added control, or a removed one that is more than a
 // leaf's own lines, falls back to.
-import { abapLiteral, unwritable, writeViewChain } from "./chain-write.mjs";
+import { abapLiteral, unwritable, writeChain } from "../vendor/linter/chain-write.mjs";
 import { alignWithXml, commentIn, readViewChain } from "./chain-read.mjs";
 import { patchChain } from "./chain-patch.mjs";
 
@@ -121,7 +121,7 @@ export function sourceWithView(source, xml, edited) {
     );
   }
   const eol = source.includes("\r\n") ? "\r\n" : "\n";
-  const text = writeViewChain({ indent: chain.indent, assignment: chain.assignment, element: built.element, eol });
+  const { text } = writeChain(built.element, { indent: chain.indent, assignment: chain.assignment, eol });
   return withinLineLimit(source, { ok: true, source: source.slice(0, chain.start) + text + source.slice(chain.end) });
 }
 

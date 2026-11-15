@@ -1,0 +1,15 @@
+{
+  "note": "What tools/vendor-linter.mjs copied from abap2UI5/linter, at which commit, and the sha256 of every file it wrote. Generated - do not edit.",
+  "repository": "abap2UI5/linter",
+  "commit": "2ce6ac819f2577c3466b0f2fa7bb44e032bf54a3",
+  "files": {
+    "src/vendor/linter/chain-write.mjs": {
+      "from": "lib/chain-write.mjs",
+      "sha256": "a57d0181cb295f4f887bd21f200cf1856fd0c8c29b8eee9837aa8caf977f75e5"
+    },
+    "src/vendor/linter/builders.mjs": {
+      "from": "lib/builders.mjs",
+      "sha256": "c8d294ee858e60a0c7a8a66d7f540a602a0b220088697077829665fdf2329c3c"
+    }
+  }
+}

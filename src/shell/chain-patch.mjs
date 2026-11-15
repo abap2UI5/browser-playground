@@ -1,7 +1,8 @@
 // @ts-check
 // Putting an edited view back as an edit, rather than as a new chain.
 //
-// `chain-write.mjs` writes a whole chain from a tree, and that is the honest
+// The linter's chain writer (src/vendor/linter/chain-write.mjs) writes a whole
+// chain from a tree, and that is the honest
 // answer for a view whose shape changed. It is the wrong answer for the edit
 // people actually make. Change one word in the View tab and the chain that
 // came back was a *different rendering of the same code*: the split shape (a
@@ -14,7 +15,7 @@
 // The house layout is not the problem and unifying it would not have helped:
 // the layout rules live in the abap2UI5 linter's `chain-house-layout` rule
 // (the `view-chain-layout` skill in the framework repository writes them out),
-// chain-write.mjs writes to them, and `tests/view-edit.spec.js` runs the rule
+// the chain writer is the linter's own and writes to them, and `tests/view-edit.spec.js` runs the rule
 // over what it wrote. Both chains here were correct. They were simply not the
 // same chain, because the whole thing had been generated again - and the fix
 // for that is to stop generating what nobody edited.
@@ -52,7 +53,7 @@
 // left in the order the chain has them (view-edit.mjs sorts them back into it,
 // new ones last). Order is not a property of the view worth a diff across a
 // control's whole block.
-import { STEP, attributeLines } from "./chain-write.mjs";
+import { STEP, attributeLines } from "../vendor/linter/chain-write.mjs";
 import { commentIn, qnameOf, readViewChain } from "./chain-read.mjs";
 
 /**
@@ -249,7 +250,7 @@ function replacingBlock(built, node, source) {
     const gap = nameEnd === undefined ? "" : source.slice(nameEnd, keyAt);
     return (gap.includes("\n") ? gap : "") + source.slice(keyAt, valueEnd);
   };
-  const lines = attributeLines(built, column, verbatim);
+  const lines = attributeLines(built, column, { verbatim });
   // Nothing left to write: the block's own line goes as well, or the closing
   // parenthesis would be left standing in column zero. A chain that opens the
   // file has no such line to take, and is left to the writer.

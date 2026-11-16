@@ -1,6 +1,6 @@
 /*
  * VENDORED - do not edit. abap2UI5/linter lib/chain-write.mjs
- * at commit 2ce6ac819f2577c3466b0f2fa7bb44e032bf54a3, copied unchanged by tools/vendor-linter.mjs.
+ * at commit a3768c90d1369e695ffdf46d755f099c9547099e, copied unchanged by tools/vendor-linter.mjs.
  * Change it upstream, then vendor it again.
  */
 /*

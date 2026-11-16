@@ -210,7 +210,18 @@ test("the app frame's stylesheets and component come out of the cache as well", 
   // this server sends no cache headers on purpose (tests/app.spec.js), so
   // here it is the one request under app/ a second visit makes. Held to
   // exactly that one, by name: a second one is a regression.
-  const syncOnly = ["/app/resources/sap/ui/layout/messagebundle_en.properties"];
+  //
+  // OpenUI5 1.154.0 brought that second one, and it is UI5's own: sap.m's
+  // English bundle lacks the POPOVER_RESIZE_HANDLE_* texts the Popover reads
+  // in init( ), so the start app's Input (its suggestion popup) makes UI5
+  // fetch the untranslated messagebundle.properties as the fallback -
+  // synchronously again, so past the worker again, which holds the file all
+  // the same (the warm-up list carries it). Named here until a UI5 release
+  // ships those texts in messagebundle_en.properties; a third is a regression.
+  const syncOnly = [
+    "/app/resources/sap/ui/layout/messagebundle_en.properties",
+    "/app/resources/sap/m/messagebundle.properties",
+  ];
   expect(
     [...fetched].filter((p) => p.startsWith("/app/")).map((p) => p.split("?")[0])
       .filter((p) => p !== "/app/index.html" && !syncOnly.includes(p)),

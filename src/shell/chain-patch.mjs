@@ -1,7 +1,7 @@
 // @ts-check
 // Putting an edited view back as an edit, rather than as a new chain.
 //
-// The linter's chain writer (src/vendor/linter/chain-write.mjs) writes a whole
+// The linter's chain writer (@abap2ui5/linter/chain-write) writes a whole
 // chain from a tree, and that is the honest
 // answer for a view whose shape changed. It is the wrong answer for the edit
 // people actually make. Change one word in the View tab and the chain that
@@ -53,7 +53,7 @@
 // left in the order the chain has them (view-edit.mjs sorts them back into it,
 // new ones last). Order is not a property of the view worth a diff across a
 // control's whole block.
-import { STEP, attributeLines } from "../vendor/linter/chain-write.mjs";
+import { STEP, attributeLines } from "@abap2ui5/linter/chain-write";
 import { commentIn, qnameOf, readViewChain } from "./chain-read.mjs";
 
 /**

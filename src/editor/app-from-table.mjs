@@ -192,9 +192,6 @@ CLASS ${className} IMPLEMENTATION.
       WHEN \`SAVE\`.
         row_save( ).
 
-      WHEN \`CANCEL\`.
-        client->popup_destroy( ).
-
     ENDCASE.
 
   ENDMETHOD.
@@ -288,14 +285,14 @@ ${cells.join("\n")}
                         )->a( n = \`type\`    v = \`Transparent\`
                         )->a( n = \`press\`   v = client->_event(
                             val = \`EDIT\`
-                            arg = \`$event.oSource.getBindingContext().getPath().split('/').pop()\` )
+                            arg = \`$event.getSource().getBindingContext().getPath().split('/').pop()\` )
                     )->tag( \`Button\`
                         )->a( n = \`icon\`    v = \`sap-icon://delete\`
                         )->a( n = \`tooltip\` v = \`Delete\`
                         )->a( n = \`type\`    v = \`Transparent\`
                         )->a( n = \`press\`   v = client->_event(
                             val = \`DELETE\`
-                            arg = \`$event.oSource.getBindingContext().getPath().split('/').pop()\` ) ).
+                            arg = \`$event.getSource().getBindingContext().getPath().split('/').pop()\` ) ).
 
     client->view_display( view->stringify( ) ).
 
@@ -323,7 +320,7 @@ ${inputs.join("\n")}
             )->a( n = \`press\` v = client->_event( \`SAVE\` )
         )->tag( \`Button\`
             )->a( n = \`text\`  v = \`Cancel\`
-            )->a( n = \`press\` v = client->_event( \`CANCEL\` ) ).
+            )->a( n = \`press\` v = client->follow_up_action( val = client->cs_event-popup_close ) ).
 
     client->popup_display( popup->stringify( ) ).
 

@@ -69,8 +69,17 @@ const TRANSFERRED = [
   /* The worker's bundle and the linter's beside it: the abap2UI5 linter
    * moved here from the page's chunks when it moved off the page's thread,
    * and the budget moved with it - 0.15 MB out of the page's, into the
-   * worker's. */
-  { file: "editor/*.mjs", limit: 0.85 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
+   * worker's.
+   *
+   * 0.85 -> 0.95 MB with linter 0.10.0: lint.mjs went from 0.16 to 0.26 MB
+   * compressed (measured over this tree, 171,026 -> 269,243 bytes). The
+   * linter keeps a rule per file now (lib/rules/), and each rule carries its
+   * card - summary, detail, example, remedy, fix note: 0.07 MB compressed of
+   * prose for 181 rules, which `./check` reaches and nothing here shows. The
+   * rest is the release's new rules. The budget moved rather than the pin
+   * held back; it goes back down when the linter's `./check` stops carrying
+   * the cards. */
+  { file: "editor/*.mjs", limit: 0.95 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
   { file: "runtime/framework.mjs", limit: 0.8 * MB, note: "abap2UI5 and open-abap, transpiled" },
   /* 0.60 until the pin bump to abap2UI5@4e0f3a01: the framework grew by
    * z2ui5_cl_ui5_llm_guide (a thousand lines) and the corpus to 0.61 MB.

@@ -62,6 +62,14 @@ export const appFirstLoad = (theme) => [
   "app/resources/sap-ui-version.json",
   "app/manifest.json?sap-language=EN",
   "app/resources/sap/m/messagebundle_en.properties",
+  // sap.m's texts once more, untranslated: OpenUI5 1.154.0's English bundle
+  // lacks the four POPOVER_RESIZE_HANDLE_* / POPOVER_HANDLE_* texts its
+  // Popover reads in init( ), so the first Popover - an Input's suggestion
+  // popup, which the app the page opens on has - makes UI5 fall back to the
+  // raw bundle, with a SYNCHRONOUS request like the layout texts above. Here
+  // so the HTTP cache has it; it goes when a UI5 release ships the texts in
+  // messagebundle_en.properties (tests/worker.spec.js names it too).
+  "app/resources/sap/m/messagebundle.properties",
   "app/resources/sap/ui/layout/library-preload.js",
   `app/resources/sap/ui/layout/themes/${theme}/library.css?sap-ui-dist-version=${UI5_VERSION}`,
   ...["72-Regular", "72-Bold", "72-SemiboldDuplex", "SAP-icons"].map(

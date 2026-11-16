@@ -33,9 +33,17 @@ test("→ App writes an app for the table on screen, and it lists, adds, changes
   await expect(rows).toHaveCount(5, { timeout: 30000 });
   await expect(rows.first()).toContainText("Notebook 14");
 
-  // Add: a dialog with one input per field, the key open on a new row.
+  // Cancel closes the dialog in the browser (cs_event-popup_close, no
+  // roundtrip of its own) and leaves the rows alone.
   await frame.getByRole("button", { name: "Add" }).click();
   const dialog = frame.locator(".sapMDialog");
+  await expect(dialog).toBeVisible({ timeout: 30000 });
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden({ timeout: 30000 });
+  await expect(rows).toHaveCount(5);
+
+  // Add: a dialog with one input per field, the key open on a new row.
+  await frame.getByRole("button", { name: "Add" }).click();
   await expect(dialog).toBeVisible({ timeout: 30000 });
   const inputs = dialog.locator("input");
   await inputs.nth(0).fill("P006");

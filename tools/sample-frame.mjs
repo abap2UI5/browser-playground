@@ -85,7 +85,7 @@ export const SOCIALS = `<div class="socials">
             <a href="https://github.com/abap2UI5/abap2UI5-local" target="_blank" rel="noopener">abap2UI5-local</a>
             <a href="https://github.com/abap2UI5/mirror-ajson" target="_blank" rel="noopener">mirror-ajson</a>
             <a href="https://github.com/abap2UI5/mirror-srtti" target="_blank" rel="noopener">mirror-srtti</a>
-            <a href="https://github.com/abap2UI5/web-abap2UI5" target="_blank" rel="noopener">web-abap2UI5</a>
+            <a href="https://github.com/abap2UI5/browser-demo" target="_blank" rel="noopener">browser-demo</a>
           </div>
           <div class="menu-group">
             <span class="menu-sub">Samples</span>

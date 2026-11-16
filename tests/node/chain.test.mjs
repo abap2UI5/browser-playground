@@ -1,6 +1,6 @@
 // The View tab's edit mode without a browser: the builder chain read out of
 // the ABAP (chain-read.mjs), written again in the house layout
-// (the linter's chain writer, vendored in src/vendor/linter/) and patched in place (chain-patch.mjs). The browser specs
+// (the linter's chain writer, @abap2ui5/linter/chain-write) and patched in place (chain-patch.mjs). The browser specs
 // in tests/view-edit.spec.js drive the same code through the page; these hold
 // the properties underneath them in milliseconds, on the same sample.
 //
@@ -12,10 +12,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { alignWithXml, commentIn, qnameOf, readViewChain, withoutComments } from "../../src/shell/chain-read.mjs";
-import { abapLiteral, unwritable, writeChain } from "../../src/vendor/linter/chain-write.mjs";
+import { abapLiteral, unwritable, writeChain } from "@abap2ui5/linter/chain-write";
 import { patchChain } from "../../src/shell/chain-patch.mjs";
 import { installDom } from "./dom.mjs";
 
@@ -210,9 +209,4 @@ test("the writer refuses what the builder cannot say, and quotes what it can", (
   assert.equal(abapLiteral("it`s"), "`it``s`");
   const element = { name: "Text", ns: "", attrs: [{ name: "text", raw: "`x`", boolean: false, key: "v" }], children: [] };
   assert.equal(unwritable(element), undefined);
-});
-
-test("the vendored chain writer is the linter's, unchanged", () => {
-  // tools/vendor-linter.mjs --check: every copy still hashes to source.json.
-  execFileSync(process.execPath, ["tools/vendor-linter.mjs", "--check"], { stdio: "pipe" });
 });

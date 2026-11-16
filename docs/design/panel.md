@@ -60,8 +60,9 @@ and an attribute whose value still reads as it was shown gets its original ABAP
 back. **That is the point of the whole thing**: the reconstruction renders
 `client->_bind( t_flight )` as `{/T_FLIGHT}` and `client->_event( … )` as
 `.eB()`, so a chain generated from the rendering alone would compile, run, and
-quietly be a different app with every binding frozen. `chain-write.mjs` writes
-the single-chain shape in the house layout, which the linter's
+quietly be a different app with every binding frozen. The linter's chain
+writer (`@abap2ui5/linter/chain-write`, vendored in `src/vendor/linter/` until
+the pinned release exports it) writes the single-chain shape in the house layout, which the linter's
 `chain-house-layout` rule checks (see the `view-chain-layout` skill in the
 framework repository) — `tests/view-edit.spec.js` holds both the layout and the
 surviving binds.
@@ -83,7 +84,7 @@ because the `v =` column is aligned across it — in the chain's own attribute
 order, new ones last, with every untouched value copied verbatim (a wrapped
 `&&` value keeps its continuation lines); a `tag( )` leaf that was taken out
 has its own lines cut; anything else that changes the shape of the view, a
-control added or renamed, falls back to `chain-write.mjs` and the full
+control added or renamed, falls back to the chain writer and the full
 single-chain rewrite, which is what it always did. The patch runs only when the
 two trees are provably the same tree, node for node and attribute for
 attribute (bar one leaf taken out per control), so leaving the surrounding ABAP

@@ -15,7 +15,7 @@ const [APP] = sampleFiles(SAMPLE);
 // The View tab reconstructs the XML a z2ui5_cl_ui5_view_builder chain
 // produces; Edit turns that into the other direction - change the XML, and the
 // chain is written again to build it (src/shell/view-edit.mjs, chain-read.mjs,
-// chain-write.mjs).
+// the linter's chain writer in src/vendor/linter/).
 //
 // The property worth holding onto is not "the XML round-trips": it is that a
 // value nobody touched keeps the ABAP that produced it. A regeneration from
@@ -76,7 +76,7 @@ test("a change to the view is written back as a builder chain, and the binds sur
   }
 
   // And the rule that says all of this, run: `chain-house-layout` is the
-  // abap2UI5 linter's own checker for the layout chain-write.mjs writes, so
+  // abap2UI5 linter's own checker for the layout the chain writer writes, so
   // this is the claim being verified rather than restated. Nothing else in the
   // file may be reported either - a rewrite that introduces a finding is a
   // rewrite that broke the sample.

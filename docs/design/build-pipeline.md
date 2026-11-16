@@ -23,7 +23,12 @@ hello world in **abap2UI5/samples**; the runtime tests drive the framework's own
 to keep in step with one somebody else maintains. `src/vendor/agent/` is the
 other thing copied in, and only by `tools/vendor-agent.mjs` - at a recorded
 commit, with each copy's sha256 in `source.json`; `--check` holds the copies
-to it and `tests/pilot.spec.js` runs that check.
+to it and `tests/pilot.spec.js` runs that check. `src/vendor/linter/` is the
+same arrangement for the abap2UI5 linter's chain writer
+(`tools/vendor-linter.mjs`, checked by `tests/node/chain.test.mjs`), and an
+interim one: the playground, the layout editor and the VS Code extension write
+a builder chain with the linter's one implementation, and the copy becomes an
+import of `@abap2ui5/linter/chain-write` once the pinned release exports it.
 
 ## The build pipeline
 

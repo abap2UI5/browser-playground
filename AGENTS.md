@@ -82,7 +82,7 @@ read them before touching `tools/` or `src/runtime/`.
 | `highlight.mjs`, `xml-pretty.mjs` | Colour for the panel's XML/JSON; XML one element per line |
 | `view-sheet.mjs` | The View tab's Properties sheet (chunk, on first use): tree, pick in app, properties from the UI5 metadata, binds, event arms, palette; `setUpSheet()` is handed what it needs |
 | `bind-options.mjs` | The Properties sheet's binds and events: `publicAttributes()`, `clientOf()`, `bindingAbap()`, `eventAbap()`, `withEventArm()` |
-| `chain-read.mjs`, `view-edit.mjs`, `chain-patch.mjs`, `chain-write.mjs` | View edit: chain read back by executing it; edited view matched to the shown one; change patched into the ABAP that is there; fallback rewrite in the house layout |
+| `chain-read.mjs`, `view-edit.mjs`, `chain-patch.mjs` | View edit: chain read back by executing it; edited view matched to the shown one; change patched into the ABAP that is there; fallback rewrite in the house layout, written by the linter's chain writer (`src/vendor/linter/`) - never a writer of its own |
 | `chat.mjs` | AI App Builder on screen (chunk, its page only) |
 | `ai-agent.mjs` | AI App Builder's conversation and tools (`runTools()`, `inspect` - the debugger for one look), chunk on use |
 | `ai-starter.mjs` | The class the studio starts on |
@@ -147,6 +147,7 @@ read them before touching `tools/` or `src/runtime/`.
 | --- | --- |
 | `src/catalogue/` | `catalogue.css` (the palette's copy) and `sample.css`, the 404's stylesheets; `search-entry.mjs` (→ `samples/search.mjs`, the 404's search box) |
 | `src/vendor/agent/` | abap2UI5/mcp-server's agent client, copied **unchanged** by `tools/vendor-agent.mjs` (`source.json`; `--check`). Never edited here |
+| `src/vendor/linter/` | abap2UI5/linter's chain writer (`lib/chain-write.mjs` and its one import), copied **unchanged** by `tools/vendor-linter.mjs` (`source.json`; `--check`, run by `tests/node/chain.test.mjs`). Interim: becomes `@abap2ui5/linter/chain-write` once the pinned release exports it. Never edited here |
 | `src/abap/` | `zcl_pg_bridge`, the playground's only ABAP |
 | `src/examples/` | ABAP served statically so `?src=` tests have same-origin targets |
 | `src/embed/` | `abap2ui5-embed.js` (the loader), `index.html` ("Eight shapes"), `host.html` (smallest embedding) |
@@ -170,6 +171,7 @@ read them before touching `tools/` or `src/runtime/`.
 | `tools/check-instrument.mjs` | The debug build over abap2UI5, the samples and open-abap: every object must parse instrumented, and no statement that runs may be left without a stop |
 | `tools/serve.mjs` | Dev/test server; mounts `dist/` three ways, answers misses with `404.html` |
 | `tools/vendor-agent.mjs` | Vendors and checks `src/vendor/agent/` |
+| `tools/vendor-linter.mjs` | Vendors and checks `src/vendor/linter/` |
 | `tools/docs-examples-summary.mjs` | The documentation examples' measurement (Playwright's JSON report of `docs-examples.spec.js`) as the job summary's table; fails on an empty or red one |
 | `tools/ai-eval-summary.mjs` | The AI App Builder's measurement (`ai-eval.jsonl`) as the job summary's table; fails on a task without a line |
 | `tests/*.spec.js` | Playwright against the built `dist/` (`bfcache.spec.js` reads rather than runs) |
@@ -284,7 +286,7 @@ Each bullet names the design doc that explains it. Keep them true.
 - An abaplint error blocks Run; an abap2UI5 linter finding never does. The two use separate Monaco marker owners.
 - A stored setting (checkers, theme, Auto, draft) is validated like a typed one, forgotten when it equals the default, and never restored in an embedded playground. A file set identical to a carried sample is not stored as a draft.
 - Format, Fix them, View edit and Reset to original: one edit per file (one Ctrl+Z), nothing without a correct answer guessed. Format is one implementation for the button and Shift+Alt+F; `FORMAT_RULES` is layout only — never `keyword_case`, `indentation`, `align_parameters`, `line_break_multiple_parameters`, `keep_single_parameter_on_one_line`.
-- View edit: what nobody edited is not rewritten; what it cannot do it refuses with a sentence, never guesses.
+- View edit: what nobody edited is not rewritten; what it cannot do it refuses with a sentence, never guesses. The layout of a written chain is the linter's (`src/vendor/linter/`, never edited here — change it in abap2UI5/linter and re-vendor); no second writer.
 
 **Phone** ([phone.md](docs/design/phone.md))
 - Below 820px the toolbar is one row and every `data-overflow` control moves into its ⋯ menu (the same element, still reachable); from 821 to 1279px only `data-overflow="early"` does (UI5 floor, Compare, Reset, Full screen, About); the status gives way with an ellipsis rather than wrapping the row; the panel starts folded; Run brings the app forward only when it started one; autorun never moves the caret or the pane.

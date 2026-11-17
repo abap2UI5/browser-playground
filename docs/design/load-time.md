@@ -9,7 +9,7 @@ Five assets stand between opening the page and an app on screen, and
 `tools/check-size.mjs` budgets those five among the nine files it holds: the page bundle with its chunks
 (~1.0 MB compressed — Monaco, as a chunk of its own; the shell itself is
 32 KB, budgeted on its own), the registry worker with the
-linter's bundle beside it (~0.7 MB — abaplint, the transpiler and the
+linter's bundle beside it (~0.8 MB — abaplint, the transpiler and the
 abap2UI5 linter), the transpiled
 framework (~0.6 MB), the ABAP corpus (~0.4 MB) and SQLite (~0.3 MB). About three megabytes, and then
 several seconds of processor to parse them. The same file carries a fifth

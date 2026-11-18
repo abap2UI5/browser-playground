@@ -13,12 +13,12 @@ import { BASE, MENU_SCRIPT, SEARCH_SCRIPT, THEME_SCRIPT, bar, foot } from "./sam
  * GitHub Pages answers anything it cannot find under this deployment with the
  * 404.html at the root of the artefact, and this deployment had none. A
  * mistyped sample, a class that was renamed upstream, a link into
- * /playground/ that has gone stale: all of them landed on GitHub's own white
+ * /browser-playground/ that has gone stale: all of them landed on GitHub's own white
  * page - no bar, no search, no way on. The manual has carried one of these for
  * a while; this is the same page for the other half of the origin.
  *
  * ABSOLUTE URLS, and this is the one page here that needs them. It is served
- * for /playground/samples/<typo>/ and for /playground/<typo> alike, so a
+ * for /browser-playground/samples/<typo>/ and for /browser-playground/<typo> alike, so a
  * relative href resolves against whatever address missed - `../../samples/`
  * from a two-deep miss is right and from a one-deep miss leaves the site. The
  * base is SITE's own path, which is where every canonical link on these pages
@@ -129,7 +129,7 @@ ${foot(BASE)}
   });
 
   /* A WORD, NOT A RUN OF LETTERS. "here" is inside "Where" and inside "There",
-     and an address that says nothing at all - /playground/nothing-like-this/ -
+     and an address that says nothing at all - /browser-playground/nothing-like-this/ -
      matched a dozen titles that way; the reader is then given a list instead of
      an honest "no idea". A title word that BEGINS with the word is the match,
      which still catches the plural and the possessive. */

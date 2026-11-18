@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   measure:
-    if: github.repository == 'abap2UI5/playground'
+    if: github.repository == 'abap2UI5/browser-playground'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

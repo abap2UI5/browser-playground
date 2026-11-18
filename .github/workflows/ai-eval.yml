@@ -15,7 +15,7 @@ name: ai-eval
 #
 # It needs a key, billed for every run: the repository secret
 # ANTHROPIC_API_KEY. Without it the job says so in its summary and stops -
-# a fork gets a green no-op. abap2UI5/playground itself does not: there the
+# a fork gets a green no-op. abap2UI5/browser-playground itself does not: there the
 # missing secret is a warning on every run and a red job on the weekly and
 # the hand-started ones, because thirteen green runs of six seconds each
 # (2026-10 to 2026-11) read as "measured" when nothing had been.
@@ -66,7 +66,7 @@ jobs:
       - name: Without a key there is nothing to measure
         if: env.AI_EVAL_KEY == ''
         env:
-          HOME_REPOSITORY: ${{ github.repository == 'abap2UI5/playground' }}
+          HOME_REPOSITORY: ${{ github.repository == 'abap2UI5/browser-playground' }}
           EVENT: ${{ github.event_name }}
         run: |
           echo "Skipped - the repository has no ANTHROPIC_API_KEY secret, so nothing was measured." >> "$GITHUB_STEP_SUMMARY"

@@ -5,7 +5,7 @@
 // That name is a menu (a <details>, so it opens and closes on its own) that
 // lists all four, the one on screen marked, so a reader in any of them sees
 // that they are one family and can get to the others from where they are.
-// abap2UI5/layout-editor carries the same list in its index.html; change the
+// abap2UI5/browser-layout-editor carries the same list in its index.html; change the
 // two together.
 //
 // The links are relative where the tool is on this deployment: ai/index.html
@@ -15,7 +15,7 @@
 /** @type {{ id: string, name: string, href: string, blurb: string }[]} */
 export const TOOLS = [
   { id: "playground", name: "Playground", href: "./", blurb: "Write ABAP in the browser and watch the app run beside it." },
-  { id: "layout", name: "Layout Editor", href: "https://abap2ui5.github.io/layout-editor/", blurb: "Design a UI5 view by drag and drop, then export it as an ABAP class." },
+  { id: "layout", name: "Layout Editor", href: "https://abap2ui5.github.io/browser-layout-editor/", blurb: "Design a UI5 view by drag and drop, then export it as an ABAP class." },
   { id: "ai", name: "AI App Builder", href: "ai/", blurb: "Describe the app you need. The AI writes it; you download it for abapGit." },
   { id: "pilot", name: "AI Agent", href: "pilot/", blurb: "Let the AI operate a running app. Describe the task and watch it work." },
 ];

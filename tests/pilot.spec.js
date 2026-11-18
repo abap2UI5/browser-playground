@@ -99,10 +99,10 @@ test("the AI Agent's page is published - title, canonical, no noindex, in the si
   await openPilot(page);
   await expect(page).toHaveTitle("AI Agent · abap2UI5");
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://abap2ui5.github.io/playground/pilot/");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://abap2ui5.github.io/browser-playground/pilot/");
   const sitemap = await (await request.get("/sitemap.xml")).text();
-  expect(sitemap).toContain("<loc>https://abap2ui5.github.io/playground/pilot/</loc>");
-  expect(sitemap).toContain("<loc>https://abap2ui5.github.io/playground/ai/</loc>");
+  expect(sitemap).toContain("<loc>https://abap2ui5.github.io/browser-playground/pilot/</loc>");
+  expect(sitemap).toContain("<loc>https://abap2ui5.github.io/browser-playground/ai/</loc>");
 });
 
 test("the Pilot types into the app on screen, presses its button and reads the answer", async ({ page }) => {

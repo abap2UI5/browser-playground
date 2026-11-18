@@ -17,7 +17,7 @@ pages. Everything below is the history of the pages that were built here.
 
 ## The sample catalogue — `src/catalogue/`, at `/samples/`
 
-**<https://abap2ui5.github.io/playground/samples/>** — every sample of
+**<https://abap2ui5.github.io/browser-playground/samples/>** — every sample of
 `abap2UI5/samples`, `abap2UI5/samples-controls` and `abap2UI5/samples-stack`,
 searchable. It is a **second document** on this site, with its own small bundle
 (~7 KB): a reader who came to look something up must not download Monaco and
@@ -347,7 +347,7 @@ Four rules hold the set together:
   its neighbours, and the catalogue's *footer* — its static half, the part that
   needs no JavaScript — links to `samples/all/`, which names all 770.
 - **No `robots.txt`.** This site is a project page under
-  `abap2ui5.github.io/playground/`, and a crawler only reads `/robots.txt` at
+  `abap2ui5.github.io/browser-playground/`, and a crawler only reads `/robots.txt` at
   the domain root, which belongs to another repository. `sitemap.xml` is
   discovered by being submitted, or not at all; the links above are what
   actually does the work.
@@ -386,7 +386,7 @@ nothing is shown when nothing is close.
 and only these pages need it — a canonical link and a sitemap are absolute by
 definition, everything else stays relative so the site still works under any
 path. The 404 is the single exception, and for the same reason: it is served at
-`/playground/samples/<typo>/` and at `/playground/<typo>` alike, so it links
+`/browser-playground/samples/<typo>/` and at `/browser-playground/<typo>` alike, so it links
 through `BASE` — `SITE`'s own path — because a relative href there resolves
 against whichever address missed. The pages are **not** in the service worker's allow list: they are static
 documents nobody revisits offline, and 770 of them in a cache is not what

@@ -51,7 +51,7 @@ export function gistIdFrom(text) {
 }
 
 /** This page, opening that gist. */
-export function playgroundUrlFor(id, base = globalThis.location?.href ?? "https://abap2ui5.github.io/playground/") {
+export function playgroundUrlFor(id, base = globalThis.location?.href ?? "https://abap2ui5.github.io/browser-playground/") {
   const url = new URL(base);
   url.search = `?gist=${encodeURIComponent(id)}`;
   url.hash = "";

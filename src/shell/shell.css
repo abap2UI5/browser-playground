@@ -2991,7 +2991,7 @@ body.is-pilot button.pilot-attach:hover { border-color: var(--pl-signal); }
 }
 
 /* THE FOUR TOOLS, ONE BAR. The Playground, the AI App Builder, the AI Agent
-   and the Layout Editor (abap2UI5/layout-editor, styles.css, the same rules)
+   and the Layout Editor (abap2UI5/browser-layout-editor, styles.css, the same rules)
    each lead their bar with the mark, "abap2UI5" and the tool's own name in
    the accent - and that name is the menu of all four (tool-switch.mjs), so
    each of them says it is one of a family and leads to the others. */

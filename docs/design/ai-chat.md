@@ -17,7 +17,7 @@ opened over it: `ai/index.html`, written by `writeAiPage( )` in
 document one directory down, with `<base href="../">` (so the bundle, the
 workers the inline script starts, the app frame and the service worker's scope
 all resolve where the playground's do: one build, two doors), `data-page="ai"`
-on `<html>`, its own title and canonical (`…/playground/ai/`), in the sitemap.
+on `<html>`, its own title and canonical (`…/browser-playground/ai/`), in the sitemap.
 The way in is the tool menu behind the tool's name in every bar
 (`tool-switch.mjs`; the 404's bar lists both AI pages under Tools,
 `tools/sample-frame.mjs`). The toolbar's own link beside Samples went with

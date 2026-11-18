@@ -96,7 +96,7 @@ function readme(files, url) {
     `# ${app}`,
     "",
     "An [abap2UI5](https://github.com/abap2UI5/abap2UI5) app, exported from the",
-    "[abap2UI5 playground](https://abap2ui5.github.io/playground/).",
+    "[abap2UI5 playground](https://abap2ui5.github.io/browser-playground/).",
     "",
     "abap2UI5 apps are ABAP and nothing else: a class implements `Z2UI5_IF_APP`",
     "and builds its UI5 view in ABAP. There is no UI5 project, no OData service",

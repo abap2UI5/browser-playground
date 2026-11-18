@@ -1,4 +1,4 @@
-// Open in Layout Editor - the way back to abap2UI5/layout-editor, which has
+// Open in Layout Editor - the way back to abap2UI5/browser-layout-editor, which has
 // had "Open in Playground" all along. A section of the Share dialog.
 //
 // What the layout editor reads (its README, "Open ABAP class"): a class by
@@ -26,7 +26,7 @@
 // shell into a chunk of their own.
 import { copyToClipboard, encodeFiles } from "./share.mjs";
 
-export const LAYOUT_EDITOR_URL = "https://abap2ui5.github.io/layout-editor/";
+export const LAYOUT_EDITOR_URL = "https://abap2ui5.github.io/browser-layout-editor/";
 
 /** The layout editor's link for the app class: { url, how: "src" | "paste" }.
  *  `raw` is the class's raw GitHub URL when it is unchanged from there. */

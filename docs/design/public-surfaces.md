@@ -151,7 +151,7 @@ deploy — readers get the published playground, never your checkout.
 - **Open in Layout Editor** (`src/shell/layout-editor.mjs`, a section of the
   Share dialog, `tests/layout-editor.spec.js`) hands the app class - the first
   file only; the layout editor edits one class - to
-  [abap2UI5/layout-editor](https://abap2ui5.github.io/layout-editor/), the way
+  [abap2UI5/browser-layout-editor](https://abap2ui5.github.io/browser-layout-editor/), the way
   back from its long-standing "Open in Playground". Two hand-overs: an app
   class unchanged since it was opened from GitHub goes as `?src=<raw URL>`
   (`unchangedRawUrl( )` in `original.mjs`, handed to the dialog's chunk from
@@ -160,7 +160,7 @@ deploy — readers get the published playground, never your checkout.
   reads); anything else is copied to the clipboard AND carried as
   `#playground=<share fragment>` - this site's own share format ("2" +
   base64url(deflate-raw(JSON `[{ name, source }]`))). The layout editor
-  reads that fragment as of abap2UI5/layout-editor's branch
+  reads that fragment as of abap2UI5/browser-layout-editor's branch
   `claude/zealous-feynman-nf350a` (`openClassFromPlayground( )` in its
   `src/ui/files.js`, on load and on `hashchange`; `filesFromPlaygroundFragment( )`
   in `src/handoff.js`: the hash cleared, decoded, the first file imported as

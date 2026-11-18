@@ -23,6 +23,6 @@ test("a word that matched nothing leaves the name's closeness cut as a closeness
   // "x13" is a word of the address that is in no title and no name: the
   // closeness answers, and only the names within one of the best are shown -
   // not half the best, which is the whole list.
-  assert.deepEqual(suggestions("/playground/samples/z2ui5_cl_smp_app_x13/"),
+  assert.deepEqual(suggestions("/browser-playground/samples/z2ui5_cl_smp_app_x13/"),
     ["Z2UI5_CL_SMP_APP_013", "Z2UI5_CL_SMP_APP_003", "Z2UI5_CL_SMP_APP_023", "Z2UI5_CL_SMP_APP_033"]);
 });

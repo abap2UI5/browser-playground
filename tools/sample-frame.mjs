@@ -12,9 +12,9 @@ import { THEME_BOOT, THEME_MENU, inlineScript } from "../src/shell/theme-boot.mj
  * link and a sitemap are absolute by definition, and everything else on this
  * site is relative so it can be served under any path (tests/subpath.spec.js).
  * PG_SITE_URL overrides it for a fork published somewhere else. */
-export const SITE = (process.env.PG_SITE_URL || "https://abap2ui5.github.io/playground/").replace(/\/*$/, "/");
+export const SITE = (process.env.PG_SITE_URL || "https://abap2ui5.github.io/browser-playground/").replace(/\/*$/, "/");
 
-/* Where this deployment sits on its origin - "/playground/". Only the 404
+/* Where this deployment sits on its origin - "/browser-playground/". Only the 404
  * needs it: every other page here is reached at a known depth and links
  * relatively, which is what lets the whole site be served from anywhere. */
 export const BASE = new URL(SITE).pathname;
@@ -66,14 +66,14 @@ export const SOCIALS = `<div class="socials">
         <a href="https://abap2ui5.github.io/docs/resources/sponsor">Sponsor</a>
         <span class="menu-head">Sites</span>
         <a href="https://abap2ui5.github.io/">Home</a>
-        <a href="https://abap2ui5.github.io/why/">For managers</a>
+        <a href="https://abap2ui5.github.io/docs-manager/">For managers</a>
         <a href="https://abap2ui5.github.io/docs/">Docs</a>
         <a href="https://abap2ui5.github.io/samples-site/">Samples</a>
         <a href="https://abap2ui5-addons.github.io/">Addons &amp; Tools</a>
         <span class="menu-head">Tools</span>
-        <a href="https://abap2ui5.github.io/playground/ai/" data-site="ai">AI App Builder</a>
-        <a href="https://abap2ui5.github.io/playground/pilot/" data-site="pilot">AI Agent</a>
-        <a href="https://abap2ui5.github.io/layout-editor/">Layout Editor</a>
+        <a href="https://abap2ui5.github.io/browser-playground/ai/" data-site="ai">AI App Builder</a>
+        <a href="https://abap2ui5.github.io/browser-playground/pilot/" data-site="pilot">AI Agent</a>
+        <a href="https://abap2ui5.github.io/browser-layout-editor/">Layout Editor</a>
         <a href="https://abap2ui5-addons.github.io/abap-cloud-gui/">Report converter</a>
         <a href="https://abap2ui5.github.io/linter/">Linter rules</a>
         <span class="menu-head">Repositories</span>
@@ -96,7 +96,7 @@ export const SOCIALS = `<div class="socials">
           <div class="menu-group">
             <span class="menu-sub">Sites</span>
             <a href="https://github.com/abap2UI5/docs" target="_blank" rel="noopener">docs</a>
-            <a href="https://github.com/abap2UI5/playground" target="_blank" rel="noopener">playground</a>
+            <a href="https://github.com/abap2UI5/browser-playground" target="_blank" rel="noopener">playground</a>
           </div>
 </div>
       </div>
@@ -147,7 +147,7 @@ export const foot = (up) => `<footer class="foot">
     <a href="https://github.com/abap2UI5/samples-controls">samples-controls</a>,
     <a href="https://github.com/abap2UI5/samples-stack">samples-stack</a> —
     and rebuilt on every deploy of the
-    <a href="https://github.com/abap2UI5/playground">playground</a>.
+    <a href="https://github.com/abap2UI5/browser-playground">playground</a>.
     <a href="${up}samples/">Search all of them</a>.
   </p>
 </footer>`;

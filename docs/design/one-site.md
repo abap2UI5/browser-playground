@@ -16,7 +16,7 @@ bold. So **text** in the accent on that grey (the tool's name in the three
 bars) takes `--accent-text`, which is the convention's own "accent strong"
 `#b02e3b` in light (5.83:1) and the accent itself in dark (`#f0606d` clears AA
 on `#1e2024`). Fills, borders and the logo keep `#d03c4a`. Both palettes carry
-the token (`shell.css`, `catalogue.css`), and so does abap2UI5/layout-editor's
+the token (`shell.css`, `catalogue.css`), and so does abap2UI5/browser-layout-editor's
 `styles.css`, which has the same grey and the same tool name - with
 `--accent-fg` beside it, where its dark buttons wrote white on `#f0606d`
 (3.18:1) instead of this page's dark text. The documentation no longer borrows the bar, its script or
@@ -28,7 +28,7 @@ its `--st-*` tokens and the family's mark instead of a spark of its own.
 
 **The four tools wear one look.** The Playground, the AI App Builder
 (`/ai/`), the AI Agent (`/pilot/`) and the Layout Editor
-(abap2UI5/layout-editor) are one family to a reader, and say so: each bar
+(abap2UI5/browser-layout-editor) are one family to a reader, and say so: each bar
 leads with the mark, "abap2UI5" and the tool's own name in the accent, and
 that name is a menu of all four with a line on each (`tool-switch.mjs`,
 `TOOLS`; the layout editor carries the same list in its `index.html`). The
@@ -117,9 +117,9 @@ deployment; Samples and Playground are here.
 one site a developer moves around in — read, find a sample, try it. Everything
 else is a tool or a page for another reader, stands on its own, and is
 reached from the menu's **Tools** list: the **AI Studio** (`/ai/`, here),
-the **Layout Editor** (abap2UI5/layout-editor) and the **Report converter**
+the **Layout Editor** (abap2UI5/browser-layout-editor) and the **Report converter**
 (abap2UI5-addons/abap-cloud-gui), and, among the practical links,
-**For managers** (abap2UI5/why). The studio was a fifth section
+**For managers** (abap2UI5/docs-manager). The studio was a fifth section
 from 2026-10-23 to 2026-10-26, so that it would not be the one door a reader
 had to know about; it went back to the menu when the line between the site
 and its tools was drawn, and the playground's toolbar still carries a link to

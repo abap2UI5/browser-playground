@@ -61,7 +61,7 @@ export function logTab() {
 // GitHub takes (ISSUE_URL_MAX); the box says so when it is too long.
 const NOT_OURS = new Set(["Link"]);
 const ISSUE_URL_MAX = 8000;
-const ISSUES = "https://github.com/abap2UI5/playground/issues/new";
+const ISSUES = "https://github.com/abap2UI5/browser-playground/issues/new";
 
 /** The new-issue address for a log entry - pure, for the test. */
 export function issueUrl(entry, { versions = "", agent = "", page = "", code = "" } = {}) {

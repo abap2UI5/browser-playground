@@ -458,7 +458,7 @@ test("one row: the brand, the tool's name as the menu of the four tools, the wor
   await name.click();
   await expect(menu.locator("a")).toHaveText([/Playground/, /Layout Editor/, /AI App Builder/, /AI Agent/]);
   await expect(menu.locator('a[aria-current="page"]')).toContainText("Playground");
-  await expect(menu.locator('a[data-tool="layout"]')).toHaveAttribute("href", "https://abap2ui5.github.io/layout-editor/");
+  await expect(menu.locator('a[data-tool="layout"]')).toHaveAttribute("href", "https://abap2ui5.github.io/browser-layout-editor/");
   await expect(menu.locator('a[data-tool="ai"]')).toHaveAttribute("href", "ai/");
   await expect(menu.locator('a[data-tool="pilot"]')).toHaveAttribute("href", "pilot/");
   await page.keyboard.press("Escape");

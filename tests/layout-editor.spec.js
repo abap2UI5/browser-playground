@@ -3,11 +3,11 @@ import { inflateRawSync } from "node:zlib";
 import { allowClipboard, getSource, MAIN_FILE, MAIN_MARK, open, setSource } from "./helpers.mjs";
 
 // Open in Layout Editor, in the Share dialog (src/shell/layout-editor.mjs):
-// the way back to abap2UI5/layout-editor. A class still exactly as it came
+// the way back to abap2UI5/browser-layout-editor. A class still exactly as it came
 // from GitHub goes as ?src=<raw URL>, which the layout editor reads today;
 // anything else goes to the clipboard and rides in the link's fragment in
 // this playground's share format, behind #playground=.
-const LAYOUT_EDITOR = "https://abap2ui5.github.io/layout-editor/";
+const LAYOUT_EDITOR = "https://abap2ui5.github.io/browser-layout-editor/";
 
 // The layout editor itself is not what is tested, and CI has no business
 // fetching it: every request to it is answered with an empty page.

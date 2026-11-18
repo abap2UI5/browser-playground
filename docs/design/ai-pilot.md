@@ -14,7 +14,7 @@ its own, reached like the studio through the tool menu of every bar:
 `pilot/index.html`, written by `writePilotPage( )` in
 `tools/site-documents.mjs` exactly as `writeAiPage( )` writes the studio's -
 `<base href="../">`, `data-page="pilot"`, its own title and canonical
-(`…/playground/pilot/`), in the sitemap. `page.mjs` reads `data-page` (`pilotPage`): the editor opens on what a link
+(`…/browser-playground/pilot/`), in the sitemap. `page.mjs` reads `data-page` (`pilotPage`): the editor opens on what a link
 carries (`#` fragment or `?src=`) or on the default sample, never on the
 stored draft, and nothing is stored over it; `setUpPilot( )` gets a small host
 from `setUpPilotHooks( )` in `agent-hooks.mjs` (Run as `runForAgent( )`, files in place of the open ones, a carried sample by

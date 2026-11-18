@@ -188,7 +188,7 @@ test("a startup failure offers a prefilled issue, with the code only on request"
   await expect(report).toHaveText("Report this");
   await expect(report).toHaveAttribute("target", "_blank");
   const url = new URL(await report.getAttribute("href"));
-  expect(url.origin + url.pathname).toBe("https://github.com/abap2UI5/playground/issues/new");
+  expect(url.origin + url.pathname).toBe("https://github.com/abap2UI5/browser-playground/issues/new");
   expect(url.searchParams.get("title")).toMatch(/^Startup: /);
   expect(url.searchParams.get("body")).toContain("corpus.json: 503");
   expect(url.searchParams.get("body")).not.toContain("The code:");

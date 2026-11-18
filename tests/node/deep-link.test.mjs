@@ -18,7 +18,7 @@ import {
   usedTables,
 } from "../../src/shell/deep-link.mjs";
 
-const PAGE = "https://abap2ui5.github.io/playground/";
+const PAGE = "https://abap2ui5.github.io/browser-playground/";
 globalThis.window = { location: { href: PAGE, origin: new URL(PAGE).origin } };
 
 const CLASS = "CLASS zcl_x DEFINITION PUBLIC.\nENDCLASS.\n";
@@ -38,7 +38,7 @@ const params = (...src) => new URLSearchParams(src.map((s) => ["src", s]));
 test("raw GitHub, a gist's raw host and this site are followed", async () => {
   const raw = "https://raw.githubusercontent.com/abap2UI5/samples/main/src/zcl_a.clas.abap";
   const gist = "https://gist.githubusercontent.com/someone/abc123/raw/zcl_b.clas.abap";
-  const local = "/playground/examples/zcl_linked_example.clas.abap";
+  const local = "/browser-playground/examples/zcl_linked_example.clas.abap";
   const files = await fetchLinkedFiles(params(raw, gist, local));
   assert.deepEqual(
     files.map((f) => f.name),

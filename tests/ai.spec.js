@@ -732,7 +732,7 @@ test("the studio's page starts on a minimal class: no run, no sample, and no way
   await expect(page).toHaveTitle("AI App Builder · abap2UI5");
   // Published: indexed, with a canonical of its own.
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
-  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://abap2ui5.github.io/playground/ai/");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://abap2ui5.github.io/browser-playground/ai/");
 });
 
 // The debugger for the model (inspect in src/shell/ai-agent.mjs): the app

@@ -24,8 +24,8 @@ test("the gist id is read out of a bare id, a gist page, an API URL and a raw UR
 });
 
 test("the playground link opens the gist and carries nothing else of the page it was made on", () => {
-  expect(playgroundUrlFor(ID, "https://abap2ui5.github.io/playground/?embed=1&src=x#code")).toBe(
-    `https://abap2ui5.github.io/playground/?gist=${ID}`,
+  expect(playgroundUrlFor(ID, "https://abap2ui5.github.io/browser-playground/?embed=1&src=x#code")).toBe(
+    `https://abap2ui5.github.io/browser-playground/?gist=${ID}`,
   );
 });
 

@@ -53,7 +53,7 @@ read them before touching `tools/` or `src/runtime/`.
 | `checker-settings.mjs` | What the two checkers' configurations (the Config tab) were last set to |
 | `theme.mjs` | The playground's light/dark switch, handed to editor and frame |
 | `theme-boot.mjs` | `THEME_BOOT`/`THEME_MENU`: the inline theme scripts every document carries (the one `localStorage` touch outside `storage.mjs`) |
-| `tool-switch.mjs` | `TOOLS`, the four abap2UI5 tools; the tool's name in every bar (playground, studio, Pilot) as the menu of all four. abap2UI5/layout-editor carries the same list - change both |
+| `tool-switch.mjs` | `TOOLS`, the four abap2UI5 tools; the tool's name in every bar (playground, studio, Pilot) as the menu of all four. abap2UI5/browser-layout-editor carries the same list - change both |
 | `files-ui.mjs` | The file strip: `+`, `+ table`, naming a file in place |
 | `share.mjs` | Share links: files in the fragment, deflate-raw + base64url |
 | `share-dialog.mjs`, `export.mjs`, `zip.mjs` | The Share dialog (link, embed block, markdown fence, Gist), the abapGit package layout (tables in `src/`, rows in `data/`), a stored zip written by hand |
@@ -299,9 +299,9 @@ Each bullet names the design doc that explains it. Keep them true.
 **Public surfaces and the site** ([public-surfaces.md](docs/design/public-surfaces.md), [sample-catalogue.md](docs/design/sample-catalogue.md), [one-site.md](docs/design/one-site.md))
 - Share links, `?src=`, `?gist=`, `?embed=`, `?view=`, `?readonly=`, `?lines=`, the embed loader and its messages, `abap-highlight.mjs`'s export and `apps.json`'s fields are contracts with abap2UI5/docs; a docs change needing new behaviour ships after the playground deploy. External pages build URLs with `abap2ui5Embed.url()`.
 - An embedded playground never reads or writes the stored draft or settings. The first-steps strip never shows on an embed, an app-only page, the AI pages or anything a link opened.
-- `#playground=` (the share fragment) is read by abap2UI5/layout-editor too.
+- `#playground=` (the share fragment) is read by abap2UI5/browser-layout-editor too.
 - The catalogue build degrades per repository and never fails the build; `samples/apps.json` is a contract with abap2UI5/samples-site, which builds from it; the redirects and the 404 go out through `withPolicy()`.
-- The four tools - Playground, AI App Builder, AI Agent, and abap2UI5/layout-editor - wear one look, the studio's ([one-site.md](docs/design/one-site.md)): the tool's name in the accent beside "abap2UI5" is the menu of all four (`tool-switch.mjs`), the work sits on 18px cards on the sunken page, pressed things are pills. A change to that look goes to the layout editor's `styles.css` too.
+- The four tools - Playground, AI App Builder, AI Agent, and abap2UI5/browser-layout-editor - wear one look, the studio's ([one-site.md](docs/design/one-site.md)): the tool's name in the accent beside "abap2UI5" is the menu of all four (`tool-switch.mjs`), the work sits on 18px cards on the sunken page, pressed things are pills. A change to that look goes to the layout editor's `styles.css` too.
 - The playground's page is one row (brand, tool's name, workbench): no project bar, no search box. The light/dark switch (`[data-theme-switch]`, `theme.mjs`) sits at the right of each of the three bars - workbench, studio, Pilot - as the layout editor carries its own. The 404 keeps its bar.
 - The bar and the menu exist once here, on the 404 (`tools/sample-frame.mjs`); the playground's page has the one row instead. The palette exists twice (`shell.css`, `catalogue.css`) — change them together. The bar carries no row of the other sites: the brand leads home, the menu names them (CONVENTION.md in abap2UI5/abap2UI5.github.io). Across the abap2UI5 sites only the family convention binds (CONVENTION.md in abap2UI5/abap2UI5.github.io: the brand goes home to https://abap2ui5.github.io/, one red accent); the documentation is a site of its own and borrows nothing from this one. `search-engine.mjs` is a copy of the docs repo's; a change to matching starts there.
 

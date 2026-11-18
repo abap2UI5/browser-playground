@@ -247,7 +247,7 @@ it back to the curated list of the day.
 
 ## Build an app by describing it
 
-The **AI App Builder** has a page of its own, [`/playground/ai/`](https://abap2ui5.github.io/playground/ai/)
+The **AI App Builder** has a page of its own, [`/browser-playground/ai/`](https://abap2ui5.github.io/browser-playground/ai/)
 - the tool's name in every bar is the menu of the four abap2UI5 tools
 (Playground, Layout Editor, AI App Builder, AI Agent). It starts on a minimal
 class: `z2ui5_if_app` implemented, `main` still empty. The chat runs down the left, and the stage beside it shows the running
@@ -348,7 +348,7 @@ real app on the right, built in your browser. It is written by hand, says
 so, and sends nothing anywhere.
 ## Let Claude operate an app
 
-The **AI Agent** has a page of its own, [`/playground/pilot/`](https://abap2ui5.github.io/playground/pilot/),
+The **AI Agent** has a page of its own, [`/browser-playground/pilot/`](https://abap2ui5.github.io/browser-playground/pilot/),
 in the same tool menu.
 Where the AI App Builder builds an app, the Agent *uses* one: the app runs on the
 stage, the chat stands beside it, and you say what you want done — *"greet
@@ -374,7 +374,7 @@ carries on from there.
 - **Any sample.** It opens on Basics II; *Change app* opens the samples
   browser, and Claude can look an app up in the catalogue and open it itself.
   A shared link or `?src=` opens your own class:
-  `/playground/pilot/?src=<raw url>` - after you said so: the app's code
+  `/browser-playground/pilot/?src=<raw url>` - after you said so: the app's code
   cannot reach your key, but the app is what Claude reads and acts on, and an
   app written to mislead can steer what Claude does in this chat.
 - **Several apps at once.** Up to four, one tab each over the stage — *+ App*
@@ -439,8 +439,8 @@ port of one, the whole playground, back to the search. The catalogue itself is o
 URL that JavaScript fills in, which is right for searching and useless for
 being *found*: there was no address for "the abap2UI5 port of `sap.m.Wizard`"
 and so nothing a search engine could return. Now there is one for each of them,
-listed in [`sitemap.xml`](https://abap2ui5.github.io/playground/sitemap.xml)
-and reachable from [the full list](https://abap2ui5.github.io/playground/samples/all/).
+listed in [`sitemap.xml`](https://abap2ui5.github.io/browser-playground/sitemap.xml)
+and reachable from [the full list](https://abap2ui5.github.io/browser-playground/samples/all/).
 
 This replaced three separate GitHub Pages sites, one per sample repository.
 
@@ -517,7 +517,7 @@ to a secret GitHub gist with your token (held for the visit, never stored) and
 hands back a `?gist=<id>` link; once code from a link has run in the page, it
 asks you to tick that you know before it takes a token. **Open in Layout
 Editor** hands the app class to the
-[abap2UI5 layout editor](https://abap2ui5.github.io/layout-editor/), to design
+[abap2UI5 layout editor](https://abap2ui5.github.io/browser-layout-editor/), to design
 its view by drag and drop and export the class back: a class still exactly as
 it came from GitHub opens there by its address; anything else is copied to
 your clipboard to paste into *Open ABAP class* there, and rides in the link as
@@ -525,7 +525,7 @@ well, for a layout editor that reads it.
 
 **Light or dark.** The page follows the system until the switch in the menu
 behind the bar's last button says otherwise — the same menu the
-[sample catalogue](https://abap2ui5.github.io/playground/samples/) and the
+[sample catalogue](https://abap2ui5.github.io/browser-playground/samples/) and the
 documentation carry, after LinkedIn and GitHub, with the project's tools and
 repositories under the switch. A choice is kept between visits; a choice that
 agrees with the system
@@ -596,7 +596,7 @@ shape a sample page's line links have).
 ```html
 <div class="abap2ui5-demo"
      data-src="https://raw.githubusercontent.com/.../z2ui5_cl_demo.clas.abap"></div>
-<script src="https://abap2ui5.github.io/playground/embed/abap2ui5-embed.js"></script>
+<script src="https://abap2ui5.github.io/browser-playground/embed/abap2ui5-embed.js"></script>
 ```
 
 `data-src` takes one URL or several (the first is the app), `data-code` carries

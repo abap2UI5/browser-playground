@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please use the GitHub Security Advisory
-["Report a Vulnerability"](https://github.com/abap2UI5/playground/security/advisories/new)
+["Report a Vulnerability"](https://github.com/abap2UI5/browser-playground/security/advisories/new)
 tab. Do not open a public issue for a security report.
 
 Expect an acknowledgement within a few days. This project is developed
@@ -13,7 +13,7 @@ advisory is where that conversation happens.
 ## Supported versions
 
 Only what is **currently deployed** at
-[abap2ui5.github.io/playground](https://abap2ui5.github.io/playground/) is
+[abap2ui5.github.io/browser-playground](https://abap2ui5.github.io/browser-playground/) is
 supported. There are no released versions to patch: `main` is the site, and a
 fix is deployed by merging it.
 

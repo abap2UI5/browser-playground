@@ -574,7 +574,7 @@ fs.copyFileSync(path.join(ROOT, "src", "catalogue", "catalogue.css"), path.join(
  * in a stylesheet resolves against the STYLESHEET, not against the page, which
  * is why this also works from `/samples/<class>/`, three levels down, without
  * a second copy or an absolute path that would have to know whether the site
- * is at `/` or at `/playground/`.
+ * is at `/` or at `/browser-playground/`.
  *
  * src/fonts/NOTICE.md says which files these are, under which licence, and why
  * they are committed rather than fetched from a font CDN. */

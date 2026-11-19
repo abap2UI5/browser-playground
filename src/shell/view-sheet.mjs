@@ -211,27 +211,118 @@ function propertySheet(file, source, xml) {
     return select;
   };
   const valueOf = (input) => (input.dataset.abap ? d.abapValue(input.dataset.abap) : input.value);
-  for (const attr of own) {
-    const row = document.createElement("label");
-    row.className = "view-prop";
-    const name = document.createElement("span");
-    name.textContent = attr.name;
+  // The rows in the sections the layout editor's inspector draws them in
+  // (abap2UI5/browser-layout-editor, src/ui/inspector.js) - Content,
+  // Appearance, Behaviour, Events, by the property's type at the floor -
+  // with the same filter, the same "set only" and the same marks for what a
+  // value is: Aa typed, @ bound to an attribute, ƒx an event or an
+  // expression. A control's tree is the list on the left, so there is no
+  // Children section here. With "set only" off, the properties the control
+  // has and does not set are rows too, empty - "— default —" until a value
+  // is typed or picked.
+  const sections = new Map(SECTIONS.map((name) => [name, []]));
+  const known = new Map((info?.properties ?? []).map((p) => [p.name, p]));
+  const sectionOf = (name) => {
+    if (info?.events.includes(name)) return "Events";
+    const type = known.get(name)?.type;
+    return type ? sectionOfType(type) : "Other";
+  };
+  const propRow = (name, value, set) => {
+    const line = document.createElement("label");
+    line.className = "view-prop";
+    line.dataset.name = name.toLowerCase();
+    if (!set) line.classList.add("is-unset");
+    const mark = document.createElement("b");
+    mark.className = "view-prop-kind";
+    const kind = /^\{.*\}$/.test(value) ? "@" : /^\.eB\(|^\.eF\(/.test(value) ? "ƒx" : "Aa";
+    mark.textContent = set ? kind : "";
+    mark.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.textContent = name;
+    label.prepend(mark);
     const input = document.createElement("input");
     input.type = "text";
-    input.value = attr.value;
-    input.dataset.attr = attr.name;
+    input.value = value;
+    input.dataset.attr = name;
     input.spellcheck = false;
+    if (!set) {
+      const dflt = known.get(name)?.default;
+      input.placeholder = dflt !== undefined && dflt !== "" ? `— default (${dflt}) —` : "— default —";
+    }
     // An expression the reconstruction rendered ({NAME}, .eB(...)) is ABAP
     // in the chain - a bind, an event. Changed here it becomes a literal;
     // left alone it stays what it is, which the sheet says.
-    if (/^\{.*\}$|^\.eB\(|^\.eF\(/.test(attr.value)) {
+    if (set && kind !== "Aa") {
       input.title = "Bound or an event in the ABAP - left alone it stays that; a new value here becomes a literal";
-      row.classList.add("is-bound");
+      line.classList.add("is-bound");
     }
-    row.append(name, input, bindSelect(attr.name, input));
-    form.append(row);
+    line.append(label, input, bindSelect(name, input));
+    sections.get(sectionOf(name)).push(line);
     inputs.push(input);
+  };
+  for (const attr of own) propRow(attr.name, attr.value, true);
+  if (!sheetView.onlySet && info) {
+    const set = new Set(own.map((a) => a.name));
+    for (const p of info.properties) if (!set.has(p.name)) propRow(p.name, "", false);
+    for (const e of info.events) if (!set.has(e)) propRow(e, "", false);
   }
+  const tools = document.createElement("div");
+  tools.className = "view-props-tools";
+  const filter = document.createElement("input");
+  filter.type = "search";
+  filter.className = "view-props-filter";
+  filter.placeholder = "Filter properties…";
+  filter.setAttribute("aria-label", "Filter properties");
+  filter.value = sheetView.filter;
+  const onlySet = document.createElement("label");
+  onlySet.className = "view-props-only";
+  const onlyBox = document.createElement("input");
+  onlyBox.type = "checkbox";
+  onlyBox.checked = sheetView.onlySet;
+  onlyBox.id = "view-props-only-set";
+  onlySet.append(onlyBox, "set only");
+  tools.append(filter, onlySet);
+  form.append(tools);
+  const groups = [];
+  for (const [name, rows] of sections) {
+    if (!rows.length) continue;
+    const group = document.createElement("fieldset");
+    group.className = "view-props-group";
+    const legend = document.createElement("legend");
+    legend.textContent = name;
+    group.append(legend);
+    if (name === "Content") {
+      const hint = document.createElement("p");
+      hint.className = "view-props-hint";
+      hint.textContent = "Aa a value · @ bound to an attribute · ƒx an event or an expression";
+      group.append(hint);
+    }
+    group.append(...rows);
+    form.append(group);
+    groups.push(group);
+  }
+  // The filter hides rows rather than drawing the sheet again: a value half
+  // typed into a row stays where it is.
+  const applyFilter = () => {
+    sheetView.filter = filter.value;
+    const q = filter.value.trim().toLowerCase();
+    for (const group of groups) {
+      let any = false;
+      for (const line of group.querySelectorAll(".view-prop")) {
+        const show = q === "" || /** @type {HTMLElement} */ (line).dataset.name.includes(q);
+        /** @type {HTMLElement} */ (line).hidden = !show;
+        any ||= show;
+      }
+      group.hidden = !any;
+    }
+  };
+  filter.addEventListener("input", applyFilter);
+  applyFilter();
+  onlyBox.addEventListener("change", () => {
+    sheetView.onlySet = onlyBox.checked;
+    sheet.element = undefined;
+    d.redraw();
+  });
   const add = document.createElement("div");
   add.className = "view-prop view-prop-new";
   const addName = document.createElement("input");
@@ -276,6 +367,9 @@ function propertySheet(file, source, xml) {
     let unknownName = "";
     for (const input of inputs) {
       const value = valueOf(input);
+      // A row of a property the control does not set: only a value typed
+      // or picked sets it.
+      if (!picked.hasAttribute(input.dataset.attr) && value === "") continue;
       if (value !== picked.getAttribute(input.dataset.attr)) {
         picked.setAttribute(input.dataset.attr, value);
         changed = true;
@@ -396,6 +490,20 @@ const PALETTE = [
   ["MessageStrip", { text: "Message" }],
   ["ObjectStatus", { text: "Status" }],
 ];
+
+// The sections of the sheet, in the layout editor's order, and which one a
+// property's UI5 type puts it in (its inspector sorts the same way).
+const SECTIONS = ["Content", "Appearance", "Behaviour", "Events", "Other"];
+export function sectionOfType(type) {
+  if (type === "boolean") return "Behaviour";
+  if (type === "string" || /URI$/.test(type)) return "Content";
+  if (type === "int" || type === "float" || type.includes(".")) return "Appearance";
+  return "Other";
+}
+
+// The filter and "set only", kept across the redraws a write sets off and
+// across controls picked, for the visit.
+const sheetView = { filter: "", onlySet: true };
 
 // Whether the app frame is waiting for the click that picks.
 let picking = false;

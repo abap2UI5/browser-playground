@@ -147,7 +147,7 @@ export function controlInfo(name) {
   for (let c = full, guard = 0; c && data[c] && guard < 30; c = data[c].parent, guard++) {
     const members = data[c].members ?? {};
     for (const [prop, decl] of Object.entries(data[c].properties ?? {})) {
-      if (!properties.has(prop) && usable(decl, decl.since ?? members[prop])) properties.set(prop, { name: prop, type: decl.type ?? "string" });
+      if (!properties.has(prop) && usable(decl, decl.since ?? members[prop])) properties.set(prop, { name: prop, type: decl.type ?? "string", default: decl.defaultValue });
     }
     for (const [event, decl] of Object.entries(data[c].events ?? {})) if (usable(decl, decl.since ?? members[event])) events.add(event);
   }

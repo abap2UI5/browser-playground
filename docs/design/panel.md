@@ -133,6 +133,20 @@ control picked by its place. It does not make the editor read-only: a write
 is one edit, like Save. `tests/view-edit.spec.js` holds a value changed and
 one added with the binds intact, and a refused name.
 
+The sheet wears the layout editor's inspector (abap2UI5/browser-layout-editor,
+`src/ui/inspector.js`) as far as a sheet over the ABAP goes: the rows in its
+sections - Content, Appearance, Behaviour, Events, by the property's UI5 type
+at the floor (`sectionOfType( )`), and Other for what the metadata does not
+know - a "Filter properties…" field that hides rows rather than drawing the
+sheet again, a "set only" box, and its marks for what a value is (Aa typed,
+@ bound, ƒx an event or an expression). With "set only" off the properties
+the control does not set are empty rows, "— default (x) —" from the
+metadata's default; only a value typed into one is written. Still different
+from the inspector: no Children section (the tree is the list on the left),
+no enum select (the metadata here names an enum's type, not its values), no
+`#` mark (there is no row binding here), and "set only" starts on, so the
+sheet opens as short as it always did.
+
 The rest of the concept's loop, on the same sheet:
 
 - **Pick in app** (step 1): the bridge's `pick( )` (frontend-bridge.js)

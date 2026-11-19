@@ -349,7 +349,6 @@ export function setUpPilot(pilotHost) {
     seesPanel: document.getElementById("pilot-sees-panel"),
     seesBody: document.getElementById("pilot-sees-body"),
     views: [...document.querySelectorAll(".pilot-view")],
-    fullscreen: document.getElementById("pilot-fullscreen"),
     hud: document.getElementById("pilot-hud"),
     stage: document.getElementById("pane-right"),
     tabs: document.getElementById("pilot-tabs"),
@@ -396,11 +395,8 @@ export function setUpPilot(pilotHost) {
   });
   el.sees.addEventListener("click", () => setSees(el.seesPanel.hidden, true));
   for (const button of el.views) button.addEventListener("click", () => setView(button.dataset.view));
-  el.fullscreen.hidden = !document.fullscreenEnabled;
-  el.fullscreen.addEventListener("click", () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else document.documentElement.requestFullscreen?.().catch(() => {});
-  });
+  // The full screen button is the shell's (setUpFullScreen( ) in
+  // export-menu.mjs), as on every bar.
 
   // The key form (the provider half shared with the studio: Anthropic, or an
   // OpenAI-compatible server with its base URL and model), Send and Stop, New

@@ -73,7 +73,7 @@ test("editing after a share retires the link, and the reload keeps the edits", a
   expect(await getSource(page)).toContain("edited after sharing");
 });
 
-test("Full screen opens the app on its own in a new tab, carrying the code", async ({ page }) => {
+test("App in new tab opens the app on its own in a new tab, carrying the code", async ({ page }) => {
   await open(page);
 
   await setSource(page, (await getSource(page)).replace(MAIN_MARK, "the full screen version"));
@@ -173,13 +173,26 @@ test("Undo takes the last edit back, Redo brings it again, and both are inactive
   await expect(page.locator("#redo")).toBeDisabled();
 });
 
-test("Ctrl+S runs, instead of offering to save the page", async ({ page }) => {
+// Ctrl+S is "keep a copy in this browser" in every abap2UI5 tool (family.mjs
+// KEYS): a draft under the app's name, in the samples browser's Drafts - and
+// neither a run nor the browser's dialog for saving the page.
+test("Ctrl+S keeps the files as a draft, instead of offering to save the page", async ({ page }) => {
   await open(page);
   const before = await page.locator("#app").getAttribute("data-src");
   await clickEditor(page);
+  await setSource(page, (await getSource(page)).replace(MAIN_MARK, "kept with Ctrl+S"));
+  await clickEditor(page);
   await page.keyboard.press("Control+s");
-  await expect(page.locator("#app")).not.toHaveAttribute("data-src", before ?? "", { timeout: 60000 });
-  await expect(page.locator("#status")).toHaveText("running", { timeout: 60000 });
+  const app = MAIN_FILE.replace(/\.clas\.abap$/, "").toUpperCase();
+  await expect(page.locator("#status")).toContainText(`kept as draft ${app} - Drafts in the Samples dialog`);
+  const drafts = await page.evaluate(() => JSON.parse(localStorage.getItem("abap2ui5-playground:drafts") ?? "[]"));
+  expect(drafts[0].name).toBe(app);
+  expect(drafts[0].files[0].source).toContain("kept with Ctrl+S");
+  // Not a run: the app on screen is the one from before.
+  expect(await page.locator("#app").getAttribute("data-src")).toBe(before);
+  // Once more is the same draft again, not a second one.
+  await page.keyboard.press("Control+s");
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("abap2ui5-playground:drafts") ?? "[]").length)).toBe(1);
 });
 
 test("Auto runs the edit by itself, and hands Run back when it is switched off", async ({ page }) => {
@@ -332,7 +345,7 @@ test("picking a sample replaces the draft, and says how to get it back", async (
   // Kept in the Drafts list as well, which is where the sentence points: it
   // used to say the draft "comes back if you reload", which read as advice to
   // reload the page.
-  await expect(page.locator("#status")).toHaveText('running - your draft is kept in Samples, under Your drafts, as "Before the last pick"', {
+  await expect(page.locator("#status")).toHaveText('running - your draft is kept in Samples, under Drafts, as "Before the last pick"', {
     timeout: 60000,
   });
   await page.locator("#examples").click();
@@ -424,7 +437,7 @@ test("on a phone Run brings the app forward - unless there is no app to bring", 
 
   // A run that never started an app is the other way round: what it left open -
   // here the problems it stopped on - is what has to stay in front.
-  await page.locator(".tab", { hasText: "ABAP" }).click();
+  await page.locator(".tab", { hasText: "Code" }).click();
   await setSource(
     page,
     (await getSource(page)).replace("PUBLIC SECTION.", "PUBLIC SECTION.\n    DATA broken TYPE zcl_does_not_exist."),
@@ -524,7 +537,7 @@ test("the header keeps to a few rows on a phone", async ({ page }) => {
   }
   await page.locator("#toolbar-more").click();
   await expect(page.locator("#toolbar-more")).toHaveAttribute("aria-expanded", "true");
-  for (const id of ["#format", "#theme", "#autorun", "#share", "#source-link", "#fullscreen", "#about"]) {
+  for (const id of ["#format", "#theme", "#autorun", "#share", "#source-link", "#fullscreen", "#about", "#export", "#page-fullscreen", "#ui5-floor", "#abap-release"]) {
     await expect(page.locator(`#toolbar-menu ${id}`)).toBeVisible();
   }
   // Each says what it is in words there - the About button is not a stray "i".
@@ -544,7 +557,7 @@ test("the header keeps to a few rows on a phone", async ({ page }) => {
   // once, the controls come back when the page hears the query change - in
   // WebKit under CI load a moment later, and a single read found Format and
   // Auto still in the menu (pages.yml on #176).
-  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setViewportSize({ width: 1600, height: 800 });
   await expect(page.locator("#toolbar-more")).toBeHidden();
   await expect.poll(() => page.locator(".toolbar > [id]").evaluateAll((all) => all.map((c) => c.id).slice(0, 7)))
     .toEqual(["undo", "redo", "format", "examples", "run", "autorun", "status"]);
@@ -615,33 +628,46 @@ test("the app follows the system theme, and a change does not restart it", async
   await expect(field).toHaveValue("still here");
 });
 
-test("the switch in the bar overrides the system theme, and is forgotten again when it agrees with it", async ({ page }) => {
+// The appearance switch at the end of every abap2UI5 tool's bar (family.mjs):
+// three states - as the system (◐), light (☀), dark (☾) - one click on to
+// the next, under one key for the origin, so the layout editor and the AI
+// pages open in the choice made here.
+test("the appearance switch goes system, light, dark and back, under the key every tool shares", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await open(page);
   const html = page.locator("html");
-  // At the right of the workbench, as in the AI App Builder's and the AI
-  // Agent's bars.
+  // The last control of the workbench, as of every tool's bar.
   const theme = page.locator(".toolbar #theme");
   const editor = page.locator(".monaco-editor").first();
-  const stored = () => page.evaluate(() => localStorage.getItem("abap2ui5-playground:theme"));
+  const stored = () => page.evaluate(() => localStorage.getItem("abap2ui5:theme"));
   const chosen = () => page.evaluate(() => document.documentElement.getAttribute("data-theme"));
   const appBackground = () =>
     page.frameLocator("#app").locator("body").evaluate((b) => getComputedStyle(b).backgroundColor);
+  const last = await page.locator(".toolbar > :not(.toolbar-more)").evaluateAll((all) => all.filter((e) => e.offsetParent !== null).pop()?.id);
+  expect(last, "the appearance switch ends the row").toBe("theme");
 
-  // Following the system: nothing chosen, nothing stored, and the switch
-  // says so.
+  // As the system: nothing chosen, nothing stored, and the switch says so.
   expect(await chosen()).toBeNull();
   expect(await stored()).toBeNull();
   await expect(theme).toBeVisible();
-  await expect(theme).toHaveAttribute("aria-checked", "false");
+  await expect(theme).toHaveAttribute("aria-label", "Appearance");
+  await expect(theme).toHaveAttribute("title", "Appearance: as the system - click for light");
+  await expect(theme.locator(".icon-glyph")).toHaveText("◐");
   await expect(editor).toHaveClass(/\bvs\b/);
   const light = await appBackground();
 
-  // One click: the page, the editor and the running app go dark - the app
-  // told rather than restarted - and the choice is kept for next time.
+  // Light: chosen and kept, even though the system says the same.
+  await theme.click();
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await expect(theme.locator(".icon-glyph")).toHaveText("☀");
+  expect(await stored()).toBe("light");
+
+  // Dark: the page, the editor and the running app - the app told rather
+  // than restarted - and kept for next time.
   await theme.click();
   await expect(html).toHaveAttribute("data-theme", "dark");
-  await expect(theme).toHaveAttribute("aria-checked", "true");
+  await expect(theme.locator(".icon-glyph")).toHaveText("☾");
+  await expect(theme).toHaveAttribute("title", "Appearance: dark - click for as the system");
   await expect(editor).toHaveClass(/vs-dark/);
   expect(await stored()).toBe("dark");
   await expect.poll(appBackground).not.toBe(light);
@@ -651,27 +677,46 @@ test("the switch in the bar overrides the system theme, and is forgotten again w
   await page.goto("/");
   expect(await chosen()).toBe("dark");
   await expect(page.locator("#status")).toHaveText("running", { timeout: 120000 });
-  await expect(theme).toHaveAttribute("aria-checked", "true");
+  await expect(theme.locator(".icon-glyph")).toHaveText("☾");
   await expect(page.locator("#app")).toHaveAttribute("data-src", /sap-ui-theme=sap_horizon_dark/);
 
-  // Switching back to what the system says is not a choice to keep.
+  // And on to "as the system" again: the key is gone.
   await theme.click();
   expect(await chosen()).toBeNull();
   expect(await stored()).toBeNull();
-  await expect(theme).toHaveAttribute("aria-checked", "false");
+  await expect(theme.locator(".icon-glyph")).toHaveText("◐");
   await expect(editor).toHaveClass(/\bvs\b/);
 });
 
-test("the AI App Builder and the AI Agent carry the same switch in their bars", async ({ page }) => {
+test("a theme chosen under the key of before is moved to the shared key", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("seeded")) {
+      sessionStorage.setItem("seeded", "1");
+      localStorage.setItem("abap2ui5-playground:theme", "dark");
+    }
+  });
+  await open(page);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await page.evaluate(() => localStorage.getItem("abap2ui5:theme"))).toBe("dark");
+  expect(await page.evaluate(() => localStorage.getItem("abap2ui5-playground:theme"))).toBeNull();
+});
+
+test("the AI App Builder and the AI Agent carry the same switch, last in their bars", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   for (const [path, id] of [["/ai/", "#studio-theme"], ["/pilot/", "#pilot-theme"]]) {
     await page.goto(path);
     const theme = page.locator(id);
     await expect(theme).toBeVisible({ timeout: 120000 });
-    await expect(theme).toHaveAttribute("aria-checked", "false");
+    const bar = path === "/ai/" ? "#studio-bar" : "#pilot-bar";
+    const last = await page.locator(`${bar} > *`).evaluateAll((all) => all.filter((e) => e.offsetParent !== null).pop()?.id);
+    expect(last, `the appearance switch ends ${bar}`).toBe(id.slice(1));
+    await expect(theme).toHaveText("◐");
+    await theme.click();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
     await theme.click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-    await expect(theme).toHaveAttribute("aria-checked", "true");
+    await expect(theme).toHaveText("☾");
     await theme.click();
     await expect(page.locator("html")).not.toHaveAttribute("data-theme", /./);
   }
@@ -856,20 +901,24 @@ test("a narrow desk keeps the row and puts the rarely used five in the menu", as
   await open(page);
   const more = page.locator("#toolbar-more");
   await expect(more).toBeVisible();
-  await expect(more).toHaveAttribute("aria-label", "More: Check against UI5, Compare, Reset, Full screen, About");
+  await expect(more).toHaveAttribute("aria-label", "More: Check against UI5, ABAP release, Compare, Reset, App in new tab, About, Full screen");
   for (const id of ["#format", "#autorun", "#share", "#source-link"]) {
     await expect(page.locator(`.toolbar > ${id}`)).toBeVisible();
   }
   await more.click();
-  for (const id of ["#ui5-floor", "#compare", "#reset-original", "#fullscreen", "#about"]) {
+  for (const id of ["#ui5-floor", "#abap-release", "#compare", "#reset-original", "#fullscreen", "#about", "#page-fullscreen"]) {
     await expect(page.locator(`#toolbar-menu ${id}`)).toBeVisible();
   }
   await page.locator("#about").click();
   await expect(page.locator("#about-dialog")).toBeVisible();
 
-  // And back at a wide desk nothing is in the menu and the button is gone.
+  // At 1440px only the two selects are in it; at 1600px nothing is, and the
+  // button is gone.
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(more).toBeHidden();
   await expect(page.locator(".toolbar > #fullscreen")).toBeVisible();
+  await expect(more).toHaveAttribute("aria-label", "More: Check against UI5, ABAP release");
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await expect(more).toBeHidden();
+  await expect(page.locator(".toolbar > #ui5-floor, .toolbar > .ui5-floor")).toHaveCount(2);
 });

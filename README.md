@@ -200,8 +200,12 @@ copied out of the playground has to clear. **UI5** in the bar, after Auto
 ("Check against UI5" in the ⋯ menu on a phone), moves that floor: 1.71, 1.84,
 1.96, 1.108, 1.120 or the latest this site carries — *"my system runs 1.84,
 what will not render there?"*. It is the same setting as `ui5` under
-**Config → abap2UI5 lint**, kept between visits the same way. Below 1280px
-it sits in the ⋯ menu with Compare, Reset, Full screen and About.
+**Config → abap2UI5 lint**, kept between visits the same way. **ABAP**
+beside it is your system's release - 7.02 - 7.31, 7.40, 7.50+ / S/4HANA or
+ABAP Cloud, the same select the AI App Builder and the layout editor carry -
+and is abaplint's version under **Config → abaplint**; a release chosen in
+any of the tools is the one the others open with. Below 1600px the two sit
+in the ⋯ menu, below 1280px with Compare, Reset, App in new tab and About.
 
 The two are kept apart on purpose, in the list and in what they block: an
 abaplint error means the ABAP does not compile, so Run stops and says so. An
@@ -251,17 +255,19 @@ The **AI App Builder** has a page of its own, [`/browser-playground/ai/`](https:
 - the tool's name in every bar is the menu of the four abap2UI5 tools
 (Playground, Layout Editor, AI App Builder, AI Agent). It starts on a minimal
 class: `z2ui5_if_app` implemented, `main` still empty. The chat runs down the left, and the stage beside it shows the running
-app in a window of its own, the code, or both side by side (**Preview**,
-**Code**, **Split** in the studio's bar; a phone takes them in turns, the chat
+app in a window of its own, both side by side, or the code (**App**,
+**Split**, **Code** in the studio's bar, the words and the order of every
+abap2UI5 tool; a phone takes them in turns, the chat
 first). Every run that starts the app is a card in the conversation that
 brings the app forward; ⛶ makes it the browser's full screen. Describe
 the app you want — *"a table of flights with a search field"* — and Claude
 writes it as an abap2UI5 class into the editor, presses Run, reads what the two
 checkers and the app said, fixes it, and runs it again until it is clean. You
 watch the code arrive in the editor and the app appear on the right while you
-talk; ask for changes until it fits, then
-**Download for abapGit** takes the class home as a repository you import
-with abapGit.
+talk; ask for changes until it fits, then **Export → Download for
+abapGit** takes the class home as a repository you import with abapGit. The
+**ABAP** select in the bar is your system's release: the check holds the code
+to it, and Claude is told.
 
 - **Your own key, and no server.** The first message asks for an
   [Anthropic API key](https://console.anthropic.com/settings/keys). It is held
@@ -303,13 +309,17 @@ with abapGit.
 - **Every step can be taken back, and the last message changed.** A step
   that changed the files offers them back under its answer; ✎ on your
   latest message takes the exchange out and puts the text back to send
-  again. **Export** writes the conversation as a markdown file, and the
+  again. **Save chat** writes the conversation as a markdown file, and the
   files stay in this browser - the welcome offers the last build back, and
   the builds before it, one per app (eight at most).
-- **Open in…** hands the build to the **Playground** (to go on by hand, with
-  the debugger and Share) or to the **AI Agent** (to have it used while you
-  watch), in a new tab, the files in the link as a share link carries them.
-  The playground's Share dialog offers the same way to the Agent.
+- **Export** at the end of the bar - the same menu every abap2UI5 tool ends
+  with - downloads for abapGit, copies the ABAP or a share link, and opens
+  the build in the **Playground** (to go on by hand, with the debugger and
+  Share), the **Layout Editor** (to lay the view out by drag and drop), the
+  **AI Agent** (to have it used while you watch) or **VS Code**, in a new
+  tab, the files in the link as a share link carries them. The way in works
+  too: Export → AI App Builder in the playground, the Agent or the layout
+  editor opens the code here, after asking.
 - **Tables of the app's own.** When the app keeps records, the model gives
   it a table (`write_table`: the fields and the rows it starts with), which
   the page writes as abapGit writes a table and creates afresh at every run —
@@ -448,7 +458,7 @@ This replaced three separate GitHub Pages sites, one per sample repository.
 
 **Samples** in the bar is the same list without leaving the editor, and it
 takes the screen while it is open: a full-size window over the playground, the
-filters down its side, the rows in as many columns as fit. **Your drafts**
+filters down its side, the rows in as many columns as fit. **Drafts**
 is one folded line at the top, with how many there are (it stays open or
 closed as you left it, and a search that matches a draft opens it); under it
 everything the catalogue holds — "N of M samples", the same count as the
@@ -486,10 +496,10 @@ row goes to the assertion, and the status line says how many failed.
 **Drafts.** The playground keeps whatever was last in the editor on its own.
 Opening a sample over it never loses it: the status line says which way back
 there is — *one Undo away* when the sample went in under the same file name,
-and otherwise *kept in Samples, under Your drafts*, under the name it was
+and otherwise *kept in Samples, under Drafts*, under the name it was
 saved as or as "Before the last pick" (only where the browser refuses to store
 it does the line fall back to *comes back if you reload*). For more than one
-piece of work, the samples browser has **Your drafts** at the top: name what
+piece of work, the samples browser has **Drafts** at the top: name what
 is open, save it, and it is listed there — in this browser — to open or delete
 another day.
 
@@ -497,7 +507,7 @@ another day.
 sample, a share link, `?src=`, a gist, a saved draft — has an original, and
 **±** beside Source shows your changes against it, file by file, in a diff;
 **⟲** puts every file back as it was opened, as one edit per file that Ctrl+Z
-takes back (a file you added goes to Your drafts). Where there is nothing to
+takes back (a file you added goes to Drafts). Where there is nothing to
 compare with — the last session restored, or what an AI wrote — they say so
 instead.
 
@@ -523,15 +533,17 @@ it came from GitHub opens there by its address; anything else is copied to
 your clipboard to paste into *Open ABAP class* there, and rides in the link as
 well, for a layout editor that reads it.
 
-**Light or dark.** The page follows the system until the switch in the menu
-behind the bar's last button says otherwise — the same menu the
-[sample catalogue](https://abap2ui5.github.io/browser-playground/samples/) and the
-documentation carry, after LinkedIn and GitHub, with the project's tools and
-repositories under the switch. A choice is kept between visits; a choice that
-agrees with the system
-is forgotten rather than stored, so a page switched back follows the system
-again from then on. The button reaches the editor and the running app as well,
-without restarting it.
+**Light or dark.** The last button of the bar - in all four abap2UI5 tools -
+goes as the system (◐), light (☀), dark (☾) and back. The choice is kept
+between visits and is one choice for all four: the layout editor and the AI
+pages open in it. The button reaches the editor and the running app as well,
+without restarting it. Beside it, ⛶ is the browser's full screen and
+**Export** the menu every tool ends with: abapGit, the ABAP, a share link,
+and the other tools.
+
+**Ctrl+S** keeps the files as a draft under the app's name, in the Drafts of
+the samples browser - in the layout editor it keeps a draft too. Ctrl+Enter
+runs.
 
 **Installable.** The page carries a web app manifest, so a browser that
 supports it offers to install the playground; opened from a home screen it
@@ -540,7 +552,7 @@ service worker's cache — the two documents included, and whatever UI5 modules
 the apps run so far have loaded. The ABAP runs in the tab either way, so there
 is no server to be away from.
 
-**Full screen** opens the app on its own in a new tab — the whole window for the
+**App in new tab** (↗) opens the app on its own in a new tab — the whole window for the
 app, nothing around it: no editor, and no bar over it either. It is the same URL
 Share writes plus `?view=full`, so the new tab is a second playground rather
 than a window onto this one: it compiles the code it was handed and runs it
@@ -576,8 +588,8 @@ so it cannot overwrite what a reader has open in a normal one, and follows its
 reader's system theme rather than a choice made in some other tab.
 **`?view=app`** drops the editor too, for a paragraph about what an app does
 rather than how it is written; the ABAP still compiles and runs, it is simply
-not on screen. **`?view=full`** is the same view under the name Full screen
-opens it by. Neither shows the bar — the app and nothing else — because Run,
+not on screen. **`?view=full`** is the same view under the name App in new
+tab opens it by. Neither shows the bar — the app and nothing else — because Run,
 the source and undo are all one click away in "Open in the playground" beside
 the frame, and a bar over a demo is this site's furniture in somebody else's
 page. It comes back if something goes wrong, because the status line it carries

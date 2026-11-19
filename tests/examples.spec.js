@@ -232,7 +232,7 @@ test("the index is listed by learning-path stage, and an entry runs through the 
   // The reader's own drafts first (none yet, folded to one line), then the
   // ones the page carries that the index does not list, then the samples
   // repository in reading order, then the controls grouped by library.
-  await expect(page.locator(".examples-group").first()).toHaveText("Your drafts");
+  await expect(page.locator(".examples-group").first()).toHaveText("Drafts");
   await expect(page.locator(".examples-group").nth(1)).toHaveText("In the page");
   await expect(page.locator(".examples-group", { hasText: "Start here" })).toBeVisible();
   await expect(page.locator(".examples-group", { hasText: "Show many rows" })).toBeVisible();
@@ -271,7 +271,7 @@ test("a catalogued entry opened over a draft leaves the stored draft for the rel
   const before = await page.locator("#app").getAttribute("data-src");
   await page.locator(".example-row", { hasText: "z2ui5_cl_smp_app_040" }).click();
   await expect(page.locator("#app")).not.toHaveAttribute("data-src", before ?? "", { timeout: 60000 });
-  await expect(page.locator("#status")).toHaveText('running - your draft is kept in Samples, under Your drafts, as "Before the last pick"', { timeout: 60000 });
+  await expect(page.locator("#status")).toHaveText('running - your draft is kept in Samples, under Drafts, as "Before the last pick"', { timeout: 60000 });
   // The editor reported the new files before the page had marked them as
   // opened, and that one report stored the catalogued class over the draft.
   expect(await stored()).toContain("work of my own");
@@ -617,7 +617,7 @@ test("without the index the browser degrades to the samples in the page, quietly
 
   // Only the drafts' row and the carried samples - every one of them, searchable -
   // and not a word about what could not be fetched.
-  await expect(page.locator(".examples-group")).toHaveText(["Your drafts", "In the page"]);
+  await expect(page.locator(".examples-group")).toHaveText(["Drafts", "In the page"]);
   await expect(page.locator(".example-row")).toHaveCount(SAMPLES.length);
   await expect(page.locator("#examples-body")).not.toContainText("404");
 
@@ -650,7 +650,7 @@ test("an index in a shape the browser does not know is skipped without a sound",
   await open(page);
   await openBrowser(page);
 
-  await expect(page.locator(".examples-group")).toHaveText(["Your drafts", "In the page"]);
+  await expect(page.locator(".examples-group")).toHaveText(["Drafts", "In the page"]);
   expect(errors).toEqual([]);
 });
 
@@ -740,7 +740,7 @@ test("the drafts are one folded line above the samples, and stay the way the rea
   await openBrowser(page);
 
   const drafts = page.locator(".examples-drafts");
-  await expect(drafts.locator("summary")).toContainText("Your drafts");
+  await expect(drafts.locator("summary")).toContainText("Drafts");
   await expect(drafts.locator("summary")).toContainText("none saved yet");
   await expect(page.locator(".drafts-name")).toBeHidden();
   await expect(page.locator(".example-row").first()).toBeInViewport();

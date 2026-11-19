@@ -9,7 +9,7 @@
 // (showDiff( ) in src/editor/monaco-editor.mjs), so the shell carries only
 // these few lines. Reset is replaceWith( ): a file still open is rewritten in
 // its model as one edit - Ctrl+Z takes it back, the way it takes back Format
-// and Fix them - and a file added since goes to Your drafts with the rest of
+// and Fix them - and a file added since goes to Drafts with the rest of
 // the work, like any other set of files opened over the reader's.
 import { closeDiff, currentFile, getFiles, openFile, showDiff } from "../editor/editor.mjs";
 import { originOf, rawFor } from "./deep-link.mjs";
@@ -50,7 +50,7 @@ export function resetToOriginal() {
   if (original.some((f) => f.name === shown)) openFile(shown);
   setStatus(
     kept?.how === "drafts"
-      ? `reset to the original - your changes are kept in Samples, under Your drafts, as "${kept.name}"`
+      ? `reset to the original - your changes are kept in Samples, under Drafts, as "${kept.name}"`
       : kept?.how === "reload"
         ? "reset to the original - your changes come back if you reload"
         : "reset to the original - Ctrl+Z takes it back",

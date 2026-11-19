@@ -10,6 +10,8 @@ import { fetchGist, gistIdFrom } from "./gist.mjs";
 import { confirmLinkedCode } from "./linked-code.mjs";
 import { aiPage, embedded, params, pilotPage } from "./page.mjs";
 import { readSession } from "./persistence.mjs";
+import { readStoredJson } from "./storage.mjs";
+import { AI_STORAGE_KEY } from "./agent-hooks.mjs";
 import { filesFromLocation } from "./share.mjs";
 import { AI_FILE, AI_STARTER } from "./ai-starter.mjs";
 
@@ -30,6 +32,34 @@ export function rememberSampleOrigins(sample, files) {
   for (const f of files) setOrigin(f.name, `${sample.github.slice(0, at + 1)}${f.name}`);
 }
 
+// The AI App Builder's start: the minimal class - or the files of a share
+// link, which is how another abap2UI5 tool hands its code over (the Export
+// menu's Open in, hand-off.mjs; the layout editor writes the same fragment).
+// Asked first, as on the Pilot's page (linked-code.mjs): the model runs the
+// app and reads what it shows. The last build is not lost either way - the
+// welcome offers it back, and remember( ) moves it among the earlier builds
+// once the linked class is changed.
+async function studioStartingFiles() {
+  const starter = { files: [{ name: AI_FILE, source: AI_STARTER }], from: "a minimal class" };
+  let shared;
+  try {
+    shared = await filesFromLocation(MAIN_FILE);
+  } catch (e) {
+    return { ...starter, failure: new Error(`The code in this link could not be read - a pasted link may have been cut short. ${e?.message || e}`) };
+  }
+  if (!shared) return starter;
+  let files;
+  try {
+    files = checkFileSet(shared);
+  } catch (e) {
+    return { ...starter, failure: e };
+  }
+  const what = `A link with ${files.length === 1 ? files[0].name : `${files.length} files, ${files[0].name} first`}, to build on here.` +
+    (readStoredJson(AI_STORAGE_KEY) ? " Your last build stays in this browser - the welcome offers it back." : "");
+  if (await confirmLinkedCode(what, { cancel: "Start on the empty class" })) return { files, from: "a shared link" };
+  return { ...starter, declined: true };
+}
+
 // Where the editor starts, in order of how deliberate the choice was: a link is
 // what somebody was sent, a stored draft is what they were last working on, and
 // the sample is the fallback. An embedded playground never restores a draft -
@@ -40,7 +70,7 @@ export function rememberSampleOrigins(sample, files) {
 // ?src= link could not be followed or the code in a shared link could not be
 // read, and `declined`, when the Pilot's reader said no to a link's code.
 export async function startingFiles() {
-  if (aiPage) return { files: [{ name: AI_FILE, source: AI_STARTER }], from: "a minimal class" };
+  if (aiPage) return studioStartingFiles();
   let failure;
   let declined = false;
   const sample = () => {

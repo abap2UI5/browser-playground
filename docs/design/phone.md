@@ -22,12 +22,18 @@ both are easy to undo by tidying up:
   every control marked `data-overflow` in `index.html` moves into its menu
   (`#toolbar-menu`, `setUpToolbarMenu( )` in `layout.mjs`) as the SAME
   element, put back where it was at desk width: Format, Auto, the UI5 select
-  ("Check against UI5"), Share, Back to the catalog, Source, Compare with
-  original, Reset to original, Full screen and About, each with its word.
+  ("Check against UI5") and the ABAP release, Share, Back to the catalog,
+  Source, Compare with original, Reset to original, App in new tab, About,
+  Export, Full screen and Appearance, each with its word.
   Between 821 and 1279px (a narrow desk, where the row wrapped to two at
-  1024px) only the controls marked `data-overflow="early"` go there - the UI5
-  select, Compare, Reset, Full screen and About - and the ⋯ button's label is
-  written from what it holds. The status line's basis is 0 at every width, so
+  1024px) only the controls marked `data-overflow="early"` go there -
+  Compare, Reset, App in new tab, About and the browser's full screen - and
+  up to 1599px the two selects marked `data-overflow="settings"`, the UI5
+  floor and the ABAP release: the row ends with what every abap2UI5 tool's
+  bar ends with (Export, full screen, appearance - one-site.md), and with
+  both selects on it the row wrapped at 1440px. The ⋯ button's label is
+  written from what it holds, and a menu with nothing on screen in it (an
+  embed hides the selects) has no button. The status line's basis is 0 at every width, so
   a long status ends in an ellipsis (whole in its title) instead of wrapping
   the row: "running - the code on screen has 1 error" moved the editor down by
   41px at 1280 and 1440px. `tests/shell.spec.js` holds both.

@@ -67,6 +67,10 @@ import { lessonChanged, startGuides } from "./guides.mjs";
 // Compare/Reset against the original, and the bar's UI5 floor (their own modules).
 import { reflectOriginal, setUpOriginal, unchangedRawUrl } from "./original.mjs";
 import { setUpUi5Floor } from "./ui5-floor.mjs";
+// The end of every bar (family.mjs): Export, full screen, the ABAP release.
+import { setUpExportMenu, setUpFullScreen } from "./export-menu.mjs";
+import { setUpReleaseSelects } from "./release-select.mjs";
+import { saveDraft } from "./drafts.mjs";
 
 const runButton = document.getElementById("run");
 const autorunButton = document.getElementById("autorun");
@@ -380,6 +384,7 @@ async function boot() {
   showSourceLink();
   setUpOriginal();
   setUpUi5Floor();
+  setUpBarEnd();
 
   if (chat) setUpStudio(chat);
   if (pilot) setUpPilotHooks(pilot, { openSamples: () => openExamples() });
@@ -435,26 +440,34 @@ async function boot() {
   // click opens the dialog rather than waiting on a download.
   (window.requestIdleCallback ?? ((fn) => setTimeout(fn, 1000)))(() => heard(examplesReady()));
 
-  // Ctrl+S as well as Ctrl+Enter: the hand that has typed in an editor for
-  // twenty years presses it, and a browser answers with a dialog for saving
-  // the page as HTML, which nobody has ever wanted here.
+  // The keys every abap2UI5 tool answers the same way (family.mjs KEYS):
+  // Ctrl+Enter runs, Ctrl+S keeps a copy in this browser - a draft - and is
+  // never the browser's dialog for saving the page as HTML, which nobody has
+  // ever wanted here. (Ctrl+S used to run as well; in the layout editor it
+  // saved, and one key that meant two things in two tools of one family was
+  // one too many.)
   // Not from inside a dialog: Ctrl+S in the Share dialog's textarea, or
-  // Ctrl+Enter in the samples browser's search, would start a run behind the
-  // modal the reader is looking at.
+  // Ctrl+Enter in the samples browser's search, would act behind the modal
+  // the reader is looking at.
   document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && (e.key === "Enter" || e.key === "s" || e.key === "S")) {
-      if (e.target instanceof Element && e.target.closest("dialog")) return;
-      // Not on the Pilot's page, whose Run is Restart: Ctrl+Enter sent the
-      // message AND ran - a fresh database under every app as the turn
-      // began. Nor from the studio's chat, where it is "send".
-      if (pilotPage || (aiPage && e.target instanceof Element && e.target.closest("#chat"))) {
-        // Ctrl+S is still not the browser's "save page as".
-        if (e.key !== "Enter") e.preventDefault();
-        return;
-      }
-      e.preventDefault();
-      runAndShow();
+    if (!(e.metaKey || e.ctrlKey)) return;
+    const save = e.key === "s" || e.key === "S";
+    if (e.key !== "Enter" && !save) return;
+    if (e.target instanceof Element && e.target.closest("dialog")) {
+      if (save) e.preventDefault();
+      return;
     }
+    if (save) {
+      e.preventDefault();
+      keepAsDraft();
+      return;
+    }
+    // Not on the Pilot's page, whose Run is Restart: Ctrl+Enter sent the
+    // message AND ran - a fresh database under every app as the turn
+    // began. Nor from the studio's chat, where it is "send".
+    if (pilotPage || (aiPage && e.target instanceof Element && e.target.closest("#chat"))) return;
+    e.preventDefault();
+    runAndShow();
   });
 
   if (aiPage && getFiles().every(isUntouchedStarter)) {
@@ -489,13 +502,13 @@ async function boot() {
   // After the first run, not before: run() opens with a clear of the output
   // panel, so a message shown earlier would be wiped by the very next line.
   if (starting.declined) {
-    setStatus("the linked code was not opened - showing the sample instead");
+    setStatus(aiPage ? "the linked code was not opened - starting on the empty class" : "the linked code was not opened - showing the sample instead");
   }
   if (starting.failure) {
     // What is on screen instead is the stored draft when there is one, not
     // always the sample - the sentence used to say "the sample" regardless.
     setStatus(
-      `the link could not be followed - showing ${from === FROM_LAST_SESSION ? "your last session" : "the sample"} instead`,
+      `the link could not be followed - showing ${from === FROM_LAST_SESSION ? "your last session" : aiPage ? "the empty class" : "the sample"} instead`,
       true,
     );
     showOutput("Link", String(starting.failure.message || starting.failure));
@@ -681,6 +694,55 @@ async function openFullScreen() {
     tab?.close();
     setStatus("the app could not be opened in a new tab", true);
     showOutput("Full screen", String(e.message || e));
+  }
+}
+
+// Ctrl+S. On the workbench: the files as a draft under the app's name, in the
+// list the samples browser shows (drafts.mjs) - the same draft again replaces
+// itself. The studio keeps its build in this browser on every change
+// (remember( ) above), so there it only says so; the Pilot keeps nothing of
+// its own and Ctrl+S does nothing there but keep the browser's dialog away.
+function keepAsDraft() {
+  if (pilotPage) return;
+  if (aiPage) {
+    sayBriefly("the build is kept in this browser - it is saved on every change");
+    return;
+  }
+  if (!keepsDrafts) {
+    sayBriefly("an embedded playground keeps no drafts - Share makes a link");
+    return;
+  }
+  const files = getFiles();
+  const name = files[0].name.replace(/\.clas\.abap$/i, "").toUpperCase();
+  if (saveDraft(name, files)) sayBriefly(`kept as draft ${name} - Drafts in the Samples dialog`);
+  else setStatus("this browser refused to keep the draft", true);
+}
+
+// The end of the bar, the same on all three pages here and in the layout
+// editor (family.mjs): the ABAP release (workbench and studio - the Pilot
+// writes no code), the Export menu, the browser's full screen. The
+// appearance switch after them is theme.mjs's.
+function setUpBarEnd() {
+  const tool = aiPage ? "ai" : pilotPage ? "pilot" : "playground";
+  const menu = /** @type {HTMLDetailsElement} */ (document.getElementById(aiPage ? "studio-export" : pilotPage ? "pilot-export" : "export"));
+  setUpExportMenu(menu, {
+    tool,
+    files: () => getFiles(),
+    say: (text, error) => (error ? setStatus(text, true) : sayBriefly(text)),
+    raw: (file) => unchangedRawUrl(file),
+    blocked: chat ? () => chat.exportGuard() : undefined,
+    zipExtras: chat ? () => chat.exportZipExtras() : undefined,
+    afterZip: chat ? () => chat.exportedZip() : undefined,
+    extras: tool === "playground"
+      ? [{ id: "share-embed", label: "Share & embed…", title: "The Share dialog: the link, the embed block, the markdown fence, a Gist", run: () => share() }]
+      : [],
+  });
+  for (const id of ["page-fullscreen", "studio-fullscreen", "pilot-fullscreen"]) setUpFullScreen(document.getElementById(id));
+  if (!pilotPage) {
+    setUpReleaseSelects(
+      [document.getElementById(aiPage ? "studio-release" : "abap-release")],
+      { onChanged: (label) => chat?.releaseChanged(label) },
+    );
   }
 }
 

@@ -27,10 +27,9 @@
 import { isUntouchedStarter } from "./ai-starter.mjs";
 import { listenForFileDrops } from "./attach-ui.mjs";
 import { createChatRoom, narrow } from "./chat-ui.mjs";
-import { abapGitZip, download } from "./export.mjs";
+import { download } from "./export.mjs";
 import { createDriver } from "./frame-drive.mjs";
 import { frameApi as apiOf } from "./frame-link.mjs";
-import { openIn } from "./hand-off.mjs";
 import { handoverMarkdown } from "./handover.mjs";
 import { readProviderSettings } from "./llm-provider.mjs";
 import { SPEEDS } from "./ai-speeds.mjs";
@@ -38,7 +37,7 @@ import { renderMarkdown } from "./markdown.mjs";
 import { frame } from "./page.mjs";
 import { readSessionJson, readStored, removeSession, removeStored, writeSessionJson, writeStored } from "./storage.mjs";
 import { setStatus } from "./ui.mjs";
-import { DEFAULT_TARGET, TARGETS, functionCalls, systemTodos, targetLabel } from "./target-system.mjs";
+import { DEFAULT_TARGET, functionCalls, systemTodos, targetLabel } from "./target-system.mjs";
 
 const KEY_STORAGE = "abap2ui5-playground:anthropic-key";
 // The stage the studio last showed - kept, the way a split is.
@@ -117,14 +116,11 @@ export function setUpChat(chatHost, { onToggle, startOpen = false } = {}) {
     keyButton: document.getElementById("chat-key-button"),
     keyRemove: document.getElementById("chat-key-remove"),
     usage: document.getElementById("chat-usage"),
-    download: document.getElementById("chat-download"),
     export: document.getElementById("chat-export"),
     reset: document.getElementById("chat-new"),
     speed: document.getElementById("chat-speed"),
-    target: document.getElementById("chat-target"),
     bar: document.getElementById("studio-bar"),
     stages: [...document.querySelectorAll(".studio-stage")],
-    fullscreen: document.getElementById("studio-fullscreen"),
     exit: document.getElementById("studio-exit"),
     url: document.getElementById("studio-url"),
     stage: document.getElementById("pane-right"),
@@ -145,13 +141,8 @@ export function setUpChat(chatHost, { onToggle, startOpen = false } = {}) {
     onToggle?.(false);
   });
   for (const button of el.stages) button.addEventListener("click", () => setStage(button.dataset.stage, true));
-  // The browser's own full screen, on top of the studio's: hidden where the
-  // page may not have it (an iframe without allowfullscreen, an old Safari).
-  el.fullscreen.hidden = !document.fullscreenEnabled;
-  el.fullscreen.addEventListener("click", () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else document.documentElement.requestFullscreen?.().catch(() => {});
-  });
+  // The browser's full screen button is the shell's (setUpFullScreen( ) in
+  // export-menu.mjs), as on every bar.
   // Crossing the phone width changes which stages there are.
   window.matchMedia("(max-width: 820px)").addEventListener("change", () => {
     if (open) setStage(document.body.dataset.stage);
@@ -164,10 +155,10 @@ export function setUpChat(chatHost, { onToggle, startOpen = false } = {}) {
     prefix: "chat",
     el,
     // A turn that keeps running while the studio is closed is still working.
-    // The download waits for it: half the files written is no app to take home.
+    // The Export menu waits for it (exportGuard( )): half the files written
+    // is no app to take home.
     onBusy: (busy) => {
       document.body.classList.toggle("is-ai-working", busy && open);
-      el.download.disabled = busy;
     },
     onStartOver: () => {
       // A key is held now: the welcome's way in without one is done.
@@ -273,54 +264,6 @@ export function setUpChat(chatHost, { onToggle, startOpen = false } = {}) {
   // A drop anywhere on the studio's own page.
   if (startOpen) listenForFileDrops({ highlight: el.chat, onFiles: (files) => chatDropped(files) });
 
-  el.download.addEventListener("click", async () => {
-    // The starting class as it was handed out is nothing to take home.
-    if (host.files().every(isUntouchedStarter)) {
-      setStatus("nothing to download yet - describe the app first");
-      room.addLine("notice", "There is nothing to download yet: the editor holds only the starting class. Describe the app you want first.");
-      return;
-    }
-    try {
-      // The record beside the class (handover.mjs): asked for, checked,
-      // tried, left to connect - read off the page as it is now.
-      const handover = await handoverNow();
-      const zip = abapGitZip(host.files(), undefined, [{ name: "HANDOVER.md", data: handover }]);
-      download(zip.name, zip.bytes);
-      setStatus(`${zip.name} is on its way`);
-      placeholderNotice();
-    } catch (e) {
-      setStatus("the zip could not be written", true);
-      room.addLine("notice", String(e?.message ?? e));
-    }
-  });
-
-  // The build in another tool, in a new tab (hand-off.mjs). Not while a
-  // turn runs - half the files written is no app to hand on - and not the
-  // untouched starter, which is nothing to open.
-  const openInMenu = document.getElementById("chat-open-in");
-  for (const button of openInMenu.querySelectorAll("button[data-hand-off]")) {
-    button.addEventListener("click", async () => {
-      openInMenu.open = false;
-      if (room.busy) {
-        setStatus("wait until the step is done");
-        return;
-      }
-      if (host.files().every(isUntouchedStarter)) {
-        setStatus("nothing to open yet - describe the app first");
-        return;
-      }
-      const tool = button.dataset.handOff === "pilot" ? "pilot" : "playground";
-      await openIn(tool, host.files());
-      setStatus(`opened in the ${tool === "pilot" ? "AI Agent" : "playground"}, in a new tab`);
-    });
-  }
-  document.addEventListener("click", (e) => {
-    if (openInMenu.open && !openInMenu.contains(/** @type {Node} */ (e.target))) openInMenu.open = false;
-  });
-  openInMenu.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") openInMenu.open = false;
-  });
-
   // The conversation as a markdown file - what was asked, what the model
   // said and did - for an issue, a colleague or a note; the key never, the
   // files as the abapGit zip.
@@ -342,59 +285,38 @@ export function setUpChat(chatHost, { onToggle, startOpen = false } = {}) {
   // the tab after every turn instead (keepConversation( )), the files are
   // kept by remember( ) in main.mjs, and both are offered back here.
 
-  setUpTarget();
   restored = restoreConversation();
   if (!restored) showWelcome();
   if (el.toggle) el.toggle.disabled = false;
   if (startOpen) setOpen(true);
 }
 
-// The reader's SAP system in the header: the release the syntax check holds
-// the code to (abaplint's version, host.setAbapRelease( ) in
-// agent-hooks.mjs), which the model is told before every request. A release
-// set in the Config tab that the list does not carry is shown as abaplint
-// names it, so the select never claims a check that is not running.
-function setUpTarget() {
-  if (!el.target) return;
-  const now = host.abapRelease?.();
-  if (!now || !host.setAbapRelease) {
-    el.target.hidden = true;
-    return;
+// What the studio's Export menu (export-menu.mjs, set up by the shell) asks
+// of the conversation: why nothing can leave right now - a turn half done,
+// or the starting class as it was handed out, which is nothing to take home -
+// and what goes into the zip beside the class: HANDOVER.md (handover.mjs),
+// asked for, checked, tried, left to connect, read off the page as it is now.
+// After a zip, the conversation says which release it was checked against
+// and what is left to connect.
+export function exportGuard() {
+  if (room?.busy) return "wait until the step is done";
+  if (host.files().every(isUntouchedStarter)) {
+    room?.addLine("notice", "There is nothing to export yet: the editor holds only the starting class. Describe the app you want first.");
+    return "nothing to export yet - describe the app first";
   }
-  for (const target of TARGETS) {
-    const option = new Option(target.label, target.version);
-    option.title = target.title;
-    el.target.append(option);
-  }
-  const show = (version) => {
-    if (![...el.target.options].some((o) => o.value === version)) el.target.append(new Option(targetLabel(version), version));
-    el.target.value = version;
-  };
-  show(now);
-  // The Config tab sets the same release: the header follows it, so it
-  // never names a check that is not the one running.
-  host.onAbapRelease?.(show);
-  el.target.addEventListener("change", async () => {
-    const version = el.target.value;
-    const label = targetLabel(version);
-    // The corpus is parsed again under the new release - seconds, during
-    // which a second change would race the first.
-    el.target.disabled = true;
-    setStatus(`checking the code against ${label}…`);
-    try {
-      await host.setAbapRelease(version, (done, total) => {
-        setStatus(`checking the code against ${label}… ${Math.round((done / total) * 100)}%`);
-      });
-      setStatus(`the code is checked against ${label} now`);
-      room.addLine("notice", `Your system: ${label}. The syntax check holds the code to it, and ${who()} is told from the next message on.`);
-    } catch (e) {
-      el.target.value = host.abapRelease();
-      setStatus("the release could not be changed", true);
-      room.addLine("notice is-error", String(e?.message ?? e));
-    } finally {
-      el.target.disabled = false;
-    }
-  });
+  return null;
+}
+
+export async function exportZipExtras() {
+  return [{ name: "HANDOVER.md", data: await handoverNow() }];
+}
+
+export const exportedZip = () => placeholderNotice();
+
+// The release changed in the studio's bar (release-select.mjs): the
+// conversation says what that means for the next message.
+export function releaseChanged(label) {
+  room?.addLine("notice", `Your system: ${label}. The syntax check holds the code to it, and ${who()} is told from the next message on.`);
 }
 
 // Said under the download: which release the code was checked against, and

@@ -1,28 +1,36 @@
 // @ts-check
 // The files on screen, handed to another of the site's tools in a tab of its
-// own: the AI App Builder's build to the playground (to go on by hand) or to
-// the AI Agent (to have it used), the playground's code to the AI Agent.
+// own: from any of the three tools here to the other two - the playground
+// (to go on by hand), the AI App Builder (to have the AI change it) and the
+// AI Agent (to have it used).
 //
 // The way across is the one every share link takes - the files deflated into
 // the fragment (share.mjs), never sent anywhere - and the page on the other
-// side opens it the way it opens a link: the playground at once, the Agent
+// side opens it the way it opens a link: the playground at once, the AI App
+// Builder at once unless it holds a build of its own (then it asks), the Agent
 // only after the reader said so (linked-code.mjs; the app is what the model
 // reads and acts on). A new tab rather than this one, so the conversation,
 // the run and the undo stacks here stay where they are.
 //
 // The three pages are one deployment: ai/ and pilot/ carry <base href="../">,
 // so "pilot/" and "./" resolve against the site's root from all three.
+//
+// The targets are family.mjs's TOOLS, the list every bar's tool menu and
+// every Export menu is written from: all of them but the layout editor, which
+// is published elsewhere and reads a fragment of its own (layout-editor.mjs).
+import { TOOLS } from "./family.mjs";
 import { encodeFiles } from "./share.mjs";
 
 /** @typedef {{ name: string, source: string }} File */
+/** @typedef {"playground" | "ai" | "pilot"} HandOffTool */
 
-export const HAND_OFF_TARGETS = {
-  playground: { path: "./", label: "Playground", blurb: "go on by hand - editor, debugger, Share" },
-  pilot: { path: "pilot/", label: "AI Agent", blurb: "have the AI use the app while you watch" },
-};
+/** @type {Record<HandOffTool, { path: string, label: string, blurb: string }>} */
+export const HAND_OFF_TARGETS = /** @type {any} */ (
+  Object.fromEntries(TOOLS.filter((t) => t.id !== "layout").map((t) => [t.id, { path: t.href, label: t.name, blurb: t.blurb }]))
+);
 
 /** The address of `tool` with `files` in its fragment.
- *  @param {keyof typeof HAND_OFF_TARGETS} tool
+ *  @param {HandOffTool} tool
  *  @param {File[]} files */
 export async function handOffUrl(tool, files) {
   const url = new URL(HAND_OFF_TARGETS[tool].path, document.baseURI);
@@ -33,7 +41,7 @@ export async function handOffUrl(tool, files) {
 /** Opens `tool` on `files` in a new tab. The tab is opened inside the click -
  *  a popup blocker lets a click open one, not a promise resolved after it -
  *  and pointed at the address once the files are encoded.
- *  @param {keyof typeof HAND_OFF_TARGETS} tool
+ *  @param {HandOffTool} tool
  *  @param {File[]} files */
 export async function openIn(tool, files) {
   const tab = window.open("about:blank", "_blank");

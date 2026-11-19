@@ -48,6 +48,7 @@ import { githubUrlOf, rawUrlOf } from "./catalogue-urls.mjs";
 import { cmpVersion } from "./ui5-libs.mjs";
 import { foldCase, termsOf, matchesTerms } from "./search-terms.mjs";
 import { deleteDraft, draftNameProblem, listDrafts, saveDraft } from "./drafts.mjs";
+import { WORDS } from "./family.mjs";
 import { readStoredJson, writeStoredJson } from "./storage.mjs";
 import { closeOnBackdrop } from "./ui.mjs";
 import { MARKS, marksOf } from "./sample-marks.mjs";
@@ -314,7 +315,7 @@ function buildDraftsGroup() {
     runs: true,
   }));
   return {
-    title: "Your drafts",
+    title: WORDS.drafts,
     blurb:
       entries.length === 0
         ? "Nothing saved yet. Name what is in the editor and save it here to come back to it another day."
@@ -329,7 +330,7 @@ function buildDraftsGroup() {
 let draftsOpen = false;
 
 // The drafts as a <details>: the group's heading in its summary, so the list
-// of headings still starts with "Your drafts", and the count beside it, so a
+// of headings still starts with "Drafts", and the count beside it, so a
 // folded section still says whether there is anything in it.
 function draftsSection(group, entries, searching, naming) {
   const section = document.createElement("details");

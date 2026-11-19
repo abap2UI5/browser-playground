@@ -18,9 +18,17 @@
 //   - an embedded playground restores neither. A demo in somebody's
 //     documentation has to read the same to every reader - the same reason it
 //     never restores a draft.
-import { abaplintDefaults, onAbaplintSettingsRejected, useAbaplintSettings } from "../editor/registry.mjs";
+//
+// The ABAP release - abaplint's `version` - is kept twice: inside the
+// abaplint settings, as before, and alone under family.mjs's RELEASE_KEY,
+// which every abap2UI5 tool on this origin reads and writes (the layout
+// editor's release select among them). A release chosen in one tool is the
+// release the next one opens with: at restore the shared key wins, since it
+// is written whenever either is.
+import { abaplintDefaults, abaplintSettings, onAbaplintSettingsRejected, useAbaplintSettings } from "../editor/registry.mjs";
 import { applyLinterSettings, linterDefaults } from "../editor/abap2ui5-lint.mjs";
-import { readStoredJson, removeStored, writeStoredJson } from "./storage.mjs";
+import { DEFAULT_RELEASE, RELEASE_KEY } from "./family.mjs";
+import { readStored, readStoredJson, removeStored, writeStored, writeStoredJson } from "./storage.mjs";
 
 const ABAPLINT_KEY = "abap2ui5-playground:abaplint";
 const LINTER_KEY = "abap2ui5-playground:abap2ui5-lint";
@@ -45,7 +53,18 @@ function keep(key, settings, defaults) {
   else writeStoredJson(key, settings);
 }
 
-export const keepAbaplintSettings = (settings) => keep(ABAPLINT_KEY, settings, abaplintDefaults());
+export const keepAbaplintSettings = (settings) => {
+  keep(ABAPLINT_KEY, settings, abaplintDefaults());
+  keepRelease(settings.version);
+};
+
+// The release alone, for the other tools: forgotten when it is the default,
+// like every stored setting here.
+function keepRelease(version) {
+  if (embedded) return;
+  if (version === DEFAULT_RELEASE) removeStored(RELEASE_KEY);
+  else writeStored(RELEASE_KEY, version);
+}
 export const keepLinterSettings = (settings) => keep(LINTER_KEY, settings, linterDefaults());
 
 // Restores both, as far as each can be restored. Called from boot( ) before the
@@ -53,6 +72,15 @@ export const keepLinterSettings = (settings) => keep(LINTER_KEY, settings, linte
 // restoring it afterwards would parse nine hundred objects twice.
 export function restoreCheckerSettings() {
   restore(ABAPLINT_KEY, useAbaplintSettings);
+  // The release another tool chose since: over whatever the settings hold.
+  const release = readStored(RELEASE_KEY);
+  if (release && release !== abaplintSettings().version) {
+    try {
+      useAbaplintSettings({ ...abaplintSettings(), version: release });
+    } catch {
+      removeStored(RELEASE_KEY);
+    }
+  }
   restore(LINTER_KEY, applyLinterSettings);
   // A rule abaplint has retired is only found out by the registry worker when
   // it builds - the page cannot know the rule list before then. It says so

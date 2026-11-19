@@ -143,12 +143,20 @@ export function setUpTabs(appOnly = false) {
 // marked `data-overflow="early"` move - the UI5 floor, Compare, Reset, Full
 // screen and About, none of which is wanted on every Run - and Format, Auto,
 // Share and Source stay on the row. Same elements, same mechanism.
+//
+// And up to 1599px the two selects - what the checkers check against, the
+// UI5 floor and the ABAP release (data-overflow="settings") - are in the
+// menu as well: the row has to carry the end every abap2UI5 tool's bar
+// carries (Export, full screen, appearance - family.mjs), and with both
+// selects on it the row wrapped at 1440px. A menu with nothing on screen
+// in it (an embedded playground hides the selects) has no button.
 export function setUpToolbarMenu() {
   const toggle = document.getElementById("toolbar-more");
   const menu = document.getElementById("toolbar-menu");
   if (!toggle || !menu) return;
   const narrow = window.matchMedia("(max-width: 820px)");
   const medium = window.matchMedia("(max-width: 1279px)");
+  const wide = window.matchMedia("(max-width: 1599px)");
   // Each control's place in the row, held by an empty comment before it, so
   // it goes back exactly where it was.
   const places = [...document.querySelectorAll(".toolbar > [data-overflow]")].map((control) => {
@@ -163,7 +171,10 @@ export function setUpToolbarMenu() {
     toggle.setAttribute("aria-expanded", "false");
     if (focus) toggle.focus();
   };
-  const inMenu = (control) => narrow.matches || (medium.matches && control.dataset.overflow === "early");
+  const inMenu = (control) =>
+    narrow.matches ||
+    (medium.matches && control.dataset.overflow === "early") ||
+    (wide.matches && control.dataset.overflow === "settings");
   const place = () => {
     close();
     for (const { control, mark } of places) {
@@ -172,13 +183,16 @@ export function setUpToolbarMenu() {
     }
     // The button names what is behind it, which is not the same list at the
     // two widths.
-    const names = [...menu.children].map(menuName).filter(Boolean);
+    const shown = [...menu.children].filter((c) => getComputedStyle(c).display !== "none");
+    const names = shown.map(menuName).filter(Boolean);
     const label = `More: ${names.join(", ")}`;
     toggle.title = label;
     toggle.setAttribute("aria-label", label);
+    toggle.hidden = shown.length === 0;
   };
   narrow.addEventListener("change", place);
   medium.addEventListener("change", place);
+  wide.addEventListener("change", place);
   place();
 
   toggle.addEventListener("click", () => {
@@ -213,6 +227,5 @@ export function setUpToolbarMenu() {
 function menuName(control) {
   const word = control.querySelector(".menu-word")?.textContent.trim();
   if (word) return word.replace(/ with original| to original/, "");
-  if (control.id === "fullscreen") return "Full screen";
   return control.textContent.trim().split("\n")[0];
 }

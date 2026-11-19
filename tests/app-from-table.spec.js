@@ -21,7 +21,7 @@ test("→ App writes an app for the table on screen, and it lists, adds, changes
   // Running - and, since "+ table" made the set somebody's work, saying where
   // that work went, as picking a sample over it does.
   await expect(page.locator("#status")).toContainText(/^running/, { timeout: 60000 });
-  await expect(page.locator("#status")).toContainText("Your drafts");
+  await expect(page.locator("#status")).toContainText("Drafts");
 
   // Nothing to complain about: neither abaplint nor the linter.
   await page.locator('[data-insight="problems"]').click();

@@ -4,7 +4,8 @@
 // Config tab's setting) and the model was never told which: it wrote 7.50
 // syntax for a reader on 7.02, the check said nothing because it ran at
 // v750, and the class failed to activate after the import. So the reader
-// picks the target in the chat header, the syntax check moves with it
+// picks the target in the studio's bar (release-select.mjs - the same select
+// every abap2UI5 tool carries), the syntax check moves with it
 // (setAbapRelease( ) in agent-hooks.mjs) and the system prompt says what
 // that release allows (ai-agent.mjs, playgroundRules).
 //
@@ -15,12 +16,18 @@
 // read as "it runs on my system".
 //
 // Pure: imported by the agent's chunk and the studio's, and by node:test.
+// The releases and their labels are family.mjs's RELEASES, the list every
+// abap2UI5 tool's release select is written from; what is added here is
+// what the model is told about each.
+import { DEFAULT_RELEASE, RELEASES } from "./family.mjs";
+
+const labelOf = (version) => RELEASES.find((r) => r.version === version)?.label;
 
 // abaplint's own spelling of each release (abaplint.Version).
 export const TARGETS = [
   {
     version: "v702",
-    label: "ABAP 7.02 - 7.31",
+    label: labelOf("v702"),
     title: "SAP NetWeaver 7.02 to 7.31 - classic syntax only",
     rules: `The person's system is SAP NetWeaver 7.02 to 7.31, and the syntax check
   runs at v702. Write ABAP 7.02: no inline declarations (DATA( ),
@@ -34,7 +41,7 @@ export const TARGETS = [
   },
   {
     version: "v740sp08",
-    label: "ABAP 7.40",
+    label: labelOf("v740sp08"),
     title: "SAP NetWeaver 7.40 SP08 - inline declarations and constructor expressions, nothing newer",
     rules: `The person's system is SAP NetWeaver 7.40, and the syntax check runs at
   v740sp08. Inline declarations, VALUE #( ), NEW #( ), COND, SWITCH and
@@ -42,7 +49,7 @@ export const TARGETS = [
   },
   {
     version: "v750",
-    label: "ABAP 7.50+ / S/4HANA",
+    label: labelOf("v750"),
     title: "7.50 or newer, S/4HANA on-premise - the playground's default",
     rules: `The person's system is 7.50 or newer (S/4HANA on-premise included), and
   the syntax check runs at v750. Write 7.50 syntax - nothing that needs a
@@ -50,7 +57,7 @@ export const TARGETS = [
   },
   {
     version: "Cloud",
-    label: "ABAP Cloud",
+    label: labelOf("Cloud"),
     title: "ABAP Cloud - SAP BTP ABAP environment, S/4HANA Cloud",
     rules: `The person's system is ABAP Cloud (SAP BTP ABAP environment or S/4HANA
   Cloud), and the syntax check runs at the ABAP for Cloud Development
@@ -63,7 +70,7 @@ export const TARGETS = [
   },
 ];
 
-export const DEFAULT_TARGET = "v750";
+export const DEFAULT_TARGET = DEFAULT_RELEASE;
 
 export const targetOf = (version) => TARGETS.find((t) => t.version === version);
 

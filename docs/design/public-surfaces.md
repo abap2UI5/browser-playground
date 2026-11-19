@@ -66,7 +66,7 @@ deploy — readers get the published playground, never your checkout.
   after `createEditor( )`.
 - **`?view=app`**: hides the editor too — the app on its own, for a paragraph
   about what an app does rather than how it is written. **`?view=full`** is the
-  same view under the name the Full screen button opens it by. Neither
+  same view under the name the App in new tab button opens it by. Neither
   **fetches Monaco**: `createEditor()` in `src/editor/editor.mjs` keeps the
   files in `file-store.mjs` on these pages — the registry worker still checks
   and compiles them, an abaplint error still stops Run — and imports
@@ -86,7 +86,7 @@ deploy — readers get the published playground, never your checkout.
   rows in as many columns as the width allows. It is a list of 770-odd samples
   and it used to be a 44rem column of one-line rows, which is a keyhole onto
   one. It lists the reader's own **named drafts** first, as one folded line
-  at the top - "Your drafts" and their count, open or closed as the reader
+  at the top - "Drafts" and their count, open or closed as the reader
   left it, and opened by a search that matches a draft
   (`src/shell/drafts.mjs`, `tests/drafts.spec.js` — a name and Save keep
   what is open under it in localStorage, fifty at most, opened and deleted

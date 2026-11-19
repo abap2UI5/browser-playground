@@ -5,6 +5,10 @@ import { getSource, MAIN_CLASS, open, openConfig, setSource } from "./helpers.mj
 // linter's floor, the same setting the abap2UI5 lint tab writes - one source
 // of truth with two faces, kept in step both ways, stored the same way, and
 // the check run again on a change.
+//
+// At 1600px, where the two selects of the bar - this one and the ABAP
+// release - are on the row; below that they are in the ⋯ menu (layout.mjs).
+test.use({ viewport: { width: 1600, height: 900 } });
 
 // A view with an icon that OpenUI5 only has from 1.96 on: reported below that
 // floor, silent from it up - and abaplint has nothing to say either way.
@@ -81,10 +85,57 @@ test("on a phone the UI5 select is in the toolbar's menu", async ({ page }) => {
   await open(page);
   await expect(page.locator("#ui5-floor")).toBeHidden();
   await page.locator("#toolbar-more").click();
-  await expect(page.locator("#toolbar-menu .ui5-floor")).toContainText("Check against UI5");
+  await expect(page.locator("#toolbar-menu .ui5-floor:not(.abap-release)")).toContainText("Check against UI5");
   await page.locator("#toolbar-menu #ui5-floor").selectOption("1.108");
   await expect(page.locator("#status")).toContainText("checked against UI5 1.108");
   // Choosing a release does not close the menu under the finger - it is a
   // setting, like Auto, whose new state is the thing worth seeing.
   await expect(page.locator("#toolbar-menu")).toBeVisible();
+});
+
+// "ABAP release" beside it (src/shell/release-select.mjs): abaplint's
+// version, the Config tab's setting, with the four entries every abap2UI5
+// tool offers (family.mjs RELEASES) - and kept under the key the other tools
+// read, so the layout editor and the AI App Builder open on it.
+test("the bar's ABAP release select is the Config tab's version, both ways, under the shared key", async ({ page }) => {
+  await open(page);
+  const release = page.locator("#abap-release");
+  await expect(release).toBeEnabled();
+  await expect(release).toHaveValue("v750");
+  await expect(release.locator("option")).toHaveText(["ABAP 7.02 - 7.31", "ABAP 7.40", "ABAP 7.50+ / S/4HANA", "ABAP Cloud"]);
+  const shared = () => page.evaluate(() => localStorage.getItem("abap2ui5:abap-release"));
+  expect(await shared()).toBeNull();
+
+  await release.selectOption("v702");
+  await expect(page.locator("#status")).toHaveText("the code is checked against ABAP 7.02 - 7.31 now", { timeout: 120000 });
+  expect(await shared()).toBe("v702");
+  await openConfig(page, "abaplint");
+  expect(JSON.parse(await page.locator(".config-text").inputValue()).version).toBe("v702");
+
+  // Changed in the tab: the select follows, with a release it does not list
+  // shown as abaplint names it.
+  const config = JSON.parse(await page.locator(".config-text").inputValue());
+  await page.locator(".config-text").fill(JSON.stringify({ ...config, version: "v757" }));
+  await page.locator(".config-row .primary").click();
+  await expect(page.locator(".config-said")).toContainText("applied", { timeout: 60000 });
+  await expect(release).toHaveValue("v757");
+  await expect(release.locator("option:checked")).toHaveText("ABAP v757");
+  expect(await shared()).toBe("v757");
+
+  // Back to the default: forgotten rather than stored.
+  await release.selectOption("v750");
+  await expect(page.locator("#status")).toHaveText("the code is checked against ABAP 7.50+ / S/4HANA now", { timeout: 120000 });
+  expect(await shared()).toBeNull();
+});
+
+test("a release chosen in another tool is the one the playground opens with", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("abap2ui5:abap-release", "Cloud");
+  });
+  await open(page);
+  await expect(page.locator("#abap-release")).toHaveValue("Cloud");
+  await openConfig(page, "abaplint");
+  expect(JSON.parse(await page.locator(".config-text").inputValue()).version).toBe("Cloud");
 });

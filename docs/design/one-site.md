@@ -44,8 +44,39 @@ and the menu with the theme switch - is gone, and with it the toolbar's
 link to the AI App Builder, which the tool's name now leads to. What
 follows about the bar describes the 404's copy (`tools/sample-frame.mjs`)
 and the history. The light/dark switch came back as an icon at the right of the row,
-beside Full screen, and the studio's and the Pilot's bars carry the same
-one beside theirs (`[data-theme-switch]`, `theme.mjs` drives them all).
+and the studio's and the Pilot's bars carry the same one
+(`[data-theme-switch]`, `theme.mjs` drives them all).
+
+**What the four tools share is one file, `src/shell/family.mjs`.** The layout
+editor (abap2UI5/browser-layout-editor) carries it byte for byte as
+`src/family.js`, and its `npm test` compares the two (`test/family.test.mjs`
+there) - change it here, then copy it over unchanged. It holds the list of
+tools (`TOOLS`, the tool menu and every Export menu's Open in), the
+appearance key and its three states, the ABAP release key and its four
+entries (`RELEASES`), the words (App, Code, Split, Problems, Drafts, Export),
+the Export menu's labels and the keys. What it makes the same in all four:
+
+- **The end of every bar**: Export ▾ (`export-menu.mjs` - Download for
+  abapGit, Copy ABAP, Copy share link, Open in the other tools, VS Code; a
+  tool's own entries after a rule), the browser's full screen ⛶, and the
+  appearance switch, always last.
+- **The appearance switch**: as the system ◐ → light ☀ → dark ☾ → as the
+  system, under `abap2ui5:theme` ("light"/"dark", absent for the system).
+  The playground's `abap2ui5-playground:theme` is moved there once by
+  `THEME_BOOT`.
+- **The ABAP release**: one select, the same four entries, in the bar of
+  every tool that writes code (the workbench, the studio, the layout
+  editor), under `abap2ui5:abap-release` - the playground keeps abaplint's
+  version there beside its own settings (`checker-settings.mjs`) and opens
+  on what another tool chose.
+- **The keys**: Ctrl+Enter runs, Ctrl+S keeps a draft in this browser, `?`
+  is help.
+- **The words**: the running app is "App" (the studio's App | Split | Code,
+  the workbench's Code | App on a phone), what would break the code is
+  "Problems", a named copy in this browser is a "Draft".
+
+The palette exists a third time in the layout editor's `styles.css`; that
+copy is compared from the layout editor's side, by the same test.
 
 What follows is the history of the one-site design. The mechanisms inside
 this origin (the four bars here, the search box, the site memory between the
@@ -222,7 +253,7 @@ four bars, and leaves the page to answer it.
 
 | | |
 |---|---|
-| the theme | `abap2ui5-playground:theme`, read before the first paint by ONE script, `THEME_BOOT` in `src/shell/theme-boot.mjs`, which the build writes into every document here (the playground's pages, the catalogue, every sample page, the 404) - the one `localStorage` touch outside `storage.mjs` - and by a head script over there. The switch in any of the four bars turns all four |
+| the theme | `abap2ui5:theme` (family.mjs; `abap2ui5-playground:theme` before, moved once), read before the first paint by ONE script, `THEME_BOOT` in `src/shell/theme-boot.mjs`, which the build writes into every document here (the playground's pages, the catalogue, every sample page, the 404) - the one `localStorage` touch outside `storage.mjs` - and by a head script over there. The switch in any of the four bars turns all four - the layout editor's included, which reads the same key |
 | where you were | `src/shell/site-memory.mjs`, imported by the shell and the catalogue bundles and by the per-sample pages through `samples/page.mjs` (`src/catalogue/page-entry.mjs`, one module for all 772 of them beside `search.mjs` - it used to be an inline copy kept in step by hand). Every samples page writes its own path down — the catalogue's *with its filters*, because the filters are the page there — and the Samples item on the other bars is lifted to it: at boot, again when the page is shown or the tab looked at again, and on the click itself (`keepSiteLinksCurrent()`), because a link lifted once and left open carries the position from before. A stored value is **checked, not followed**: resolved against this origin and kept only if it is still inside the href the markup carries, so a poisoned or stale key costs a restored position and nothing else. All three items open in the same tab — the sites are one site, and a bar that opened one of them in a second window was the one asymmetry between the four bars |
 | where **on** the page you were | The same file, keys `:scroll` (a small map of path → offset, the twelve most recent) and `:returning`. The item above came back to the page and to the TOP of it, which on a list of 770 rows is most of the way to not having remembered anything. Restored **on arrival by the bar and nowhere else**: a `data-back` link writes down how far down this page the reader is and one record saying where they are being sent, and the page that *is* that, arriving within half a minute and with no hash of its own, honours it. Restoring on every load would fight the browser's own back-and-forward restoration and would drop a reader who followed an ordinary link into the middle of a page. Checked the same way a stored path is — `scrollTo` takes whatever it is given |
 | the last thing you searched for | `src/shell/search-engine.mjs`, key `:search`, described above. Checked: a string, short, and less than half an hour old |

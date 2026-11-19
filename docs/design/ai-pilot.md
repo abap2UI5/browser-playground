@@ -166,8 +166,12 @@ document's app start (`offerFrameBridge( )` in `agent-hooks.mjs`). A pick in the
 the Pilot on this page (`pilotPicked( )`): in place of the app on screen, or
 beside after the strip's **+ App**, and a catalogue row of a sample the page
 carries opens that copy instead of fetching it; a saved draft is a pick like
-any other. The playground's Run shortcut (Ctrl+Enter, Ctrl+S) is off on this
-page and in the studio's chat, where Ctrl+Enter is "send". Autorun is never restored on
+any other. The playground's Run shortcut (Ctrl+Enter) is off on this
+page and in the studio's chat, where Ctrl+Enter is "send"; Ctrl+S, which
+keeps a draft on the workbench, does nothing here but keep the browser's
+"save page as" away. The bar ends as every abap2UI5 tool's does: Export
+(`export-menu.mjs` - the files of the apps it runs, to abapGit, a link or
+another tool), full screen, the appearance switch. Autorun is never restored on
 this page: a change to the files is an app opened beside, and a run would
 restart them all.
 

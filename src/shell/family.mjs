@@ -110,4 +110,38 @@ export const KEYS = {
   /** Keep a copy in this browser - a draft - never the browser's "Save as". */
   save: "Ctrl+S",
   help: "?",
+  /** The command palette - outside a code editor, whose own Ctrl+K chords stay its own. */
+  palette: "Ctrl+K",
 };
+
+// --- Help ------------------------------------------------------------------
+// `?` opens the same dialog in every tool: what this tool does, then its keys,
+// in that order, under these headings. Each tool writes its own sentences
+// and lists its own keys; the dialog's shape is the same.
+
+export const HELP = {
+  /** @param {string} tool  the tool's name, as TOOLS has it */
+  title: (tool) => `${tool} - help`,
+  about: "What this tool does",
+  keys: "Keyboard shortcuts",
+};
+
+// --- UI5 releases ----------------------------------------------------------
+// The UI5 releases a tool offers wherever it asks for one: the playground's
+// check (the release the linter holds the view to), the layout editor's
+// preview (the release the canvas runs on). The same list, so the same
+// numbers appear in both; "latest" comes on top of it in each tool.
+
+export const UI5_RELEASES = ["1.71", "1.84", "1.96", "1.108", "1.120", "1.136"];
+/** @param {string} v */
+export const ui5Label = (v) => (v === "1.71" ? "1.71 (oldest supported)" : v);
+
+// --- The status ------------------------------------------------------------
+// Every bar says what is happening in one muted line, in one place: right
+// after the tool's main controls, never at the far end of the bar.
+
+// --- First steps -----------------------------------------------------------
+// The hint strip a first visit shows ("New here? Try:"), with the same
+// heading in every tool that has one; closed once, closed for good.
+
+export const FIRST_STEPS = "New here? Try:";

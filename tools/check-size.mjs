@@ -57,8 +57,13 @@ const TRANSFERRED = [
    * screen. The AI rooms, the samples browser, the Share dialog and every
    * sample but the default one are chunks (src/shell/main.mjs says which and
    * why), so a module that drifts back into the entry shows here where the
-   * sum above would hide it. */
-  { file: "assets/shell.mjs", limit: 0.04 * MB, note: "the shell itself, on every page" },
+   * sum above would hide it. 0.0415 MB rather than 0.04 since the help on
+   * `?` (help.mjs) and the command palette's Ctrl+K (palette-commands.mjs)
+   * joined it, 0.45 KB together: the shell sat 8 bytes under 0.04 MB, and
+   * what they need to work on a page whose startup failed - the dialog, the
+   * key - has to be in the entry. The palette itself, its commands and the
+   * key table are chunks (palette.mjs, help-keys.mjs). */
+  { file: "assets/shell.mjs", limit: 0.0415 * MB, note: "the shell itself, on every page" },
   /* The two stylesheets, apart on purpose: shell.css is on every page and
    * Monaco's only where an editor is drawn (index.html's inline script links
    * it; monacoCssPlugin in tools/esbuild-plugins.mjs keeps it out of

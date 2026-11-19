@@ -225,7 +225,9 @@ export function setUpToolbarMenu() {
 // A control's short name in the menu button's label: the word it shows in
 // the menu where it has one, else its own text.
 function menuName(control) {
-  const word = control.querySelector(".menu-word")?.textContent.trim();
+  // The words alone - not the key a <kbd> beside them names (Command palette).
+  const wordEl = control.querySelector(".menu-word");
+  const word = wordEl && [...wordEl.childNodes].filter((n) => n.nodeName !== "KBD").map((n) => n.textContent).join("").trim();
   if (word) return word.replace(/ with original| to original/, "");
   return control.textContent.trim().split("\n")[0];
 }

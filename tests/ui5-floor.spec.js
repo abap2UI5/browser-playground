@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { getSource, MAIN_CLASS, open, openConfig, setSource } from "./helpers.mjs";
 
-// "Check against UI5" in the bar (src/shell/ui5-floor.mjs): the abap2UI5
+// "UI5 check" in the bar (src/shell/ui5-floor.mjs): the abap2UI5
 // linter's floor, the same setting the abap2UI5 lint tab writes - one source
 // of truth with two faces, kept in step both ways, stored the same way, and
 // the check run again on a change.
@@ -40,10 +40,17 @@ test("the bar's UI5 select is the lint tab's ui5, both ways, and re-runs the che
   const floor = page.locator("#ui5-floor");
   await expect(floor).toBeEnabled();
   await expect(floor).toHaveValue("1.71");
+  // "latest" on top, then the releases every abap2UI5 tool offers
+  // (family.mjs UI5_RELEASES, the layout editor's preview field lists the
+  // same), 1.71 named for what it is.
   const offered = await floor.locator("option").evaluateAll((all) => all.map((o) => o.value));
-  expect(offered.slice(0, 5)).toEqual(["1.71", "1.84", "1.96", "1.108", "1.120"]);
-  expect(offered[5]).toMatch(/^1\.\d{3}$/);
-  await expect(floor.locator("option").nth(5)).toHaveText(/^latest/);
+  expect(offered[0]).toMatch(/^1\.\d{3}$/);
+  await expect(floor.locator("option").first()).toHaveText(/^latest \(1\.\d{3}\)$/);
+  expect(offered.slice(1, 7)).toEqual(["1.71", "1.84", "1.96", "1.108", "1.120", "1.136"]);
+  await expect(floor.locator("option").nth(1)).toHaveText("1.71 (oldest supported)");
+  // Said what it is and what it is not: the release of the check, not of the app.
+  await expect(floor).toHaveAttribute("title", /^The UI5 release the linter checks the view against - the app runs on 1\.\d+\.\d+$/);
+  await expect(page.locator(".toolbar .ui5-floor .icon-glyph, #toolbar-menu .ui5-floor .menu-word").first()).toContainText("UI5 check");
 
   await setSource(page, withIcon("accessibility"));
   await expect(iconRow(page).first()).toBeVisible({ timeout: 20000 });
@@ -85,7 +92,7 @@ test("on a phone the UI5 select is in the toolbar's menu", async ({ page }) => {
   await open(page);
   await expect(page.locator("#ui5-floor")).toBeHidden();
   await page.locator("#toolbar-more").click();
-  await expect(page.locator("#toolbar-menu .ui5-floor:not(.abap-release)")).toContainText("Check against UI5");
+  await expect(page.locator("#toolbar-menu .ui5-floor:not(.abap-release)")).toContainText("UI5 check");
   await page.locator("#toolbar-menu #ui5-floor").selectOption("1.108");
   await expect(page.locator("#status")).toContainText("checked against UI5 1.108");
   // Choosing a release does not close the menu under the finger - it is a

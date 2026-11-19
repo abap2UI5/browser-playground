@@ -127,6 +127,7 @@ export function applyLinterFixes(source) {
 // is the control's full name (sap.m.Button) or its tag alone, which is looked
 // for in the libraries this page carries, sap.m first. null for a control
 // the snapshot does not know, or before the linter has arrived. Plain data.
+const BASE_CLASSES = new Set(["sap.ui.core.Control", "sap.ui.core.Element", "sap.ui.base.ManagedObject"]);
 export function controlInfo(name) {
   if (lib?.loadSnapshot === undefined) return null;
   let data;
@@ -141,15 +142,43 @@ export function controlInfo(name) {
   if (!full) return null;
   const properties = new Map();
   const events = new Set();
+  const aggregations = new Map();
+  let defaultAggregation;
   // The since of a member is on its declaration or, as the linter reads it,
   // in the control's `members` table.
   const usable = (decl, since) => decl && !decl.deprecated && (!since || lib.withinUi5Floor(since, floor));
+  // An enum's values at the floor, as an XML view writes them (the enum's
+  // key where key and value differ - `enumKeys`), for the sheet's select;
+  // a boolean's are true and false. undefined for a free value.
+  const enums = data.__enums ?? {};
+  const enumSince = data.__enumSince ?? {};
+  const enumKeys = data.__enumKeys ?? {};
+  const valuesOf = (type) => {
+    if (type === "boolean") return ["true", "false"];
+    const all = enums[type];
+    if (!Array.isArray(all)) return undefined;
+    const since = enumSince[type] ?? {};
+    return all.filter((v) => !since[v] || lib.withinUi5Floor(since[v], floor)).map((v) => enumKeys[type]?.[v] ?? v);
+  };
   for (let c = full, guard = 0; c && data[c] && guard < 30; c = data[c].parent, guard++) {
     const members = data[c].members ?? {};
     for (const [prop, decl] of Object.entries(data[c].properties ?? {})) {
-      if (!properties.has(prop) && usable(decl, decl.since ?? members[prop])) properties.set(prop, { name: prop, type: decl.type ?? "string", default: decl.defaultValue });
+      if (properties.has(prop) || !usable(decl, decl.since ?? members[prop])) continue;
+      const type = decl.type ?? "string";
+      const values = valuesOf(type);
+      properties.set(prop, { name: prop, type, default: decl.defaultValue, ...(values ? { values } : {}) });
     }
     for (const [event, decl] of Object.entries(data[c].events ?? {})) if (usable(decl, decl.since ?? members[event])) events.add(event);
+    // The aggregations a view fills - not the private ones (_name), and not
+    // the ones every control has from sap.ui.core.Control and Element
+    // (tooltip, customData, layoutData, dependents, …): the sheet's Children
+    // is about what this control holds.
+    if (!BASE_CLASSES.has(c)) {
+      for (const [agg, decl] of Object.entries(data[c].aggregations ?? {})) {
+        if (!agg.startsWith("_") && !aggregations.has(agg) && usable(decl, decl?.since ?? members[agg])) aggregations.set(agg, agg);
+      }
+    }
+    defaultAggregation ??= data[c].defaultAggregation;
   }
-  return { name: full, floor, properties: [...properties.values()], events: [...events] };
+  return { name: full, floor, properties: [...properties.values()], events: [...events], aggregations: [...aggregations.keys()], defaultAggregation };
 }

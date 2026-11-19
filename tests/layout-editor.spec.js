@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { inflateRawSync } from "node:zlib";
-import { allowClipboard, getSource, MAIN_FILE, MAIN_MARK, open, setSource } from "./helpers.mjs";
+import { allowClipboard, getSource, MAIN_FILE, MAIN_MARK, open, setSource, openShare } from "./helpers.mjs";
 
 // Open in Layout Editor, in the Share dialog (src/shell/layout-editor.mjs):
 // the way back to abap2UI5/browser-layout-editor. A class still exactly as it came
@@ -17,7 +17,7 @@ test.beforeEach(async ({ context }) => {
 });
 
 async function openInLayoutEditor(page) {
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#share-dialog")).toBeVisible();
   const button = page.locator("#share-layout-editor");
   await expect(button).toBeEnabled();

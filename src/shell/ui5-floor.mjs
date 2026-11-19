@@ -1,4 +1,4 @@
-// "Check against UI5" - the bar's select over the abap2UI5 linter's floor.
+// "UI5 check" - the bar's select over the abap2UI5 linter's floor.
 //
 // The same setting the abap2UI5 lint tab edits as JSON (`ui5`), not a second
 // one: a change here goes through applyLinterSettings( ) and is kept by
@@ -13,10 +13,12 @@ import { applyLinterSettings, linterSettings, onLinterSettings } from "../editor
 import { keepLinterSettings } from "./checker-settings.mjs";
 import { problemsChanged } from "./insight-common.mjs";
 import { UI5_VERSION } from "./ui5-libraries.mjs";
+import { UI5_RELEASES, ui5Label } from "./family.mjs";
 import { setStatus } from "./ui.mjs";
 
 const LATEST = UI5_VERSION.split(".").slice(0, 2).join(".");
-const RELEASES = ["1.71", "1.84", "1.96", "1.108", "1.120"];
+// The UI5 releases every abap2UI5 tool offers (family.mjs UI5_RELEASES - the
+// layout editor's preview field lists the same), "latest" on top.
 
 let select;
 // Bumped by every applied change, from either face: what a change() finds
@@ -24,12 +26,12 @@ let select;
 let applied = 0;
 
 function reflect(ui5) {
-  const known = [...RELEASES, LATEST];
+  const known = [LATEST, ...UI5_RELEASES.filter((v) => v !== LATEST)];
   // 1.71 is named for what it is: a first-time visitor read the default of
   // this select as the UI5 the app beside it runs on, and the page as six
   // years old. The app runs on the site's UI5 (ui5-libraries.mjs); this is
   // the release the linter holds the view to.
-  const options = known.map((v) => new Option(v === LATEST ? `latest (${v})` : v === "1.71" ? "1.71 (oldest supported)" : v, v));
+  const options = known.map((v) => new Option(v === LATEST ? `latest (${v})` : ui5Label(v), v));
   if (!known.includes(ui5)) options.push(new Option(ui5, ui5));
   select.replaceChildren(...options);
   select.value = ui5;
@@ -62,6 +64,9 @@ async function change() {
 export function setUpUi5Floor() {
   select = document.getElementById("ui5-floor");
   if (!select) return;
+  const said = `The UI5 release the linter checks the view against - the app runs on ${UI5_VERSION}`;
+  select.closest("label")?.setAttribute("title", said);
+  select.title = said;
   reflect(linterSettings().ui5);
   onLinterSettings((now) => {
     applied++;

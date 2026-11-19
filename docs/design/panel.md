@@ -138,14 +138,25 @@ The sheet wears the layout editor's inspector (abap2UI5/browser-layout-editor,
 sections - Content, Appearance, Behaviour, Events, by the property's UI5 type
 at the floor (`sectionOfType( )`), and Other for what the metadata does not
 know - a "Filter properties…" field that hides rows rather than drawing the
-sheet again, a "set only" box, and its marks for what a value is (Aa typed,
-@ bound, ƒx an event or an expression). With "set only" off the properties
-the control does not set are empty rows, "— default (x) —" from the
-metadata's default; only a value typed into one is written. Still different
-from the inspector: no Children section (the tree is the list on the left),
-no enum select (the metadata here names an enum's type, not its values), no
-`#` mark (there is no row binding here), and "set only" starts on, so the
-sheet opens as short as it always did.
+sheet again, a "set only" box, and its marks for what a value is, with the
+inspector's hint line under Content: "Aa a value · @ bound to an attribute ·
+# a field of the row · ƒx a UI5 expression" (`valueKind( )`: an absolute
+path is an attribute of the app, a relative one a field of a list's or a
+table's row, an expression binding or an event the chain raises is ƒx).
+An enum's property and a boolean's are a select - the enum's values at the
+floor, from the linter's metadata (`controlInfo( )` reads `enums`,
+`enumSince` and, for the eight enums whose XML key differs from the value,
+`enumKeys`), "— default (x) —" first; set back to the default, the property
+goes. With "set only" off the properties the control does not set are empty
+rows, "— default (x) —" from the metadata's default; only a value typed or
+picked into one is written. After Events, **Children**: the control's own
+aggregations at the floor (not the ones every control has from
+sap.ui.core.Control and Element), each with how many controls the view puts
+in it - a lower-case child element is an aggregation by name, a control
+straight under the element is in the default one (`childrenOf( )`) - and a
+click picks the first of them. Read-only: what goes in is added with "Add
+after this". Still different from the inspector: "set only" starts on, so
+the sheet opens as short as it always did.
 
 The rest of the concept's loop, on the same sheet:
 
@@ -246,7 +257,7 @@ the text says would help; today only the rename offer (checkers.md). Not a
 list: a log is not a menu.
 
 **Report this** sits under every entry that is the page's own fault -
-Startup, Run, Tests, Format, Fix them, Share, Compare, Samples, Drafts, the
+Startup, Run, Tests, Format, Fix them, Share (Export → Share & embed…), Compare, Samples, Drafts, the
 linter's load - and not under what is about the reader's code: an entry
 written with `reader: true` (file and class disagree, the transpiler refused
 a statement, the ABAP ran into the 30-second watchdog), or `Link` (the link's

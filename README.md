@@ -196,16 +196,16 @@ reader was told to fix code that had nothing wrong with it.
 
 The abap2UI5 linter runs its own rules on top, against UI5 **1.71** — the floor
 abap2UI5 holds its own shipped apps to, and therefore the floor an example
-copied out of the playground has to clear. **UI5** in the bar, after Auto
-("Check against UI5" in the ⋯ menu on a phone), moves that floor: 1.71, 1.84,
-1.96, 1.108, 1.120 or the latest this site carries — *"my system runs 1.84,
+copied out of the playground has to clear. **UI5 check** in the bar, after
+Auto, moves that floor: 1.71, 1.84, 1.96, 1.108, 1.120, 1.136 or the latest
+this site carries — *"my system runs 1.84,
 what will not render there?"*. It is the same setting as `ui5` under
 **Config → abap2UI5 lint**, kept between visits the same way. **ABAP**
 beside it is your system's release - 7.02 - 7.31, 7.40, 7.50+ / S/4HANA or
 ABAP Cloud, the same select the AI App Builder and the layout editor carry -
 and is abaplint's version under **Config → abaplint**; a release chosen in
 any of the tools is the one the others open with. Below 1600px the two sit
-in the ⋯ menu, below 1280px with Compare, Reset, App in new tab and About.
+in the ⋯ menu, below 1280px with Compare, Reset, App in new tab, the command palette and Help.
 
 The two are kept apart on purpose, in the list and in what they block: an
 abaplint error means the ABAP does not compile, so Run stops and says so. An

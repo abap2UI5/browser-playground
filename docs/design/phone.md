@@ -22,12 +22,14 @@ both are easy to undo by tidying up:
   every control marked `data-overflow` in `index.html` moves into its menu
   (`#toolbar-menu`, `setUpToolbarMenu( )` in `layout.mjs`) as the SAME
   element, put back where it was at desk width: Format, Auto, the UI5 select
-  ("Check against UI5") and the ABAP release, Share, Back to the catalog,
-  Source, Compare with original, Reset to original, App in new tab, About,
-  Export, Full screen and Appearance, each with its word.
+  ("UI5 check") and the ABAP release, Back to the catalog, Source, Compare
+  with original, Reset to original, App in new tab, Command palette, Help,
+  Export, Full screen and Appearance, each with its word. There is no Share
+  button: the Share dialog is Export's "Share & embed…".
   Between 821 and 1279px (a narrow desk, where the row wrapped to two at
   1024px) only the controls marked `data-overflow="early"` go there -
-  Compare, Reset, App in new tab, About and the browser's full screen - and
+  Compare, Reset, App in new tab, Command palette, Help and the browser's
+  full screen - and
   up to 1599px the two selects marked `data-overflow="settings"`, the UI5
   floor and the ABAP release: the row ends with what every abap2UI5 tool's
   bar ends with (Export, full screen, appearance - one-site.md), and with

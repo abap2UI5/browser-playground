@@ -254,9 +254,9 @@
 
   <!-- The abap2UI5 linter's UI5 floor, the `ui5` of the abap2UI5 lint tab -
        one setting with two faces (src/shell/ui5-floor.mjs fills it). -->
-  <label class="ui5-floor" data-overflow="settings" title="Which UI5 release the abap2UI5 linter checks the view against - not the UI5 the app runs on, which is the newest">
-    <span class="icon-glyph">UI5</span><span class="menu-word">Check against UI5</span>
-    <select id="ui5-floor" disabled aria-label="Check against UI5"><option>1.71</option></select>
+  <label class="ui5-floor" data-overflow="settings" title="The UI5 release the linter checks the view against - the app runs on the newest">
+    <span class="icon-glyph">UI5 check</span><span class="menu-word">UI5 check</span>
+    <select id="ui5-floor" disabled aria-label="UI5 check"><option>1.71</option></select>
   </label>
 
   <!-- The reader's SAP system, abaplint's release - the Config tab's
@@ -274,7 +274,6 @@
   <span id="status" class="status" role="status" aria-live="polite">starting…</span>
   <span class="spacer"></span>
 
-  <button id="share" data-overflow disabled title="Copy a link that carries this code">Share</button>
   <!-- The way back, only for a reader who came from the sample catalogue: it
        used to take the Source link's place, which left that reader with no
        route to the class on GitHub. Same origin and same tab - a way back is
@@ -293,12 +292,17 @@
        every abap2UI5 tool's bar. -->
   <button id="fullscreen" class="icon" data-overflow="early" disabled title="App in new tab - the app on its own" aria-label="App in new tab"><span class="icon-glyph" aria-hidden="true">&#x2197;</span><span class="menu-word">App in new tab</span></button>
 
+  <!-- The command palette (palette.mjs, family.mjs KEYS.palette): every
+       action of the bar by name, as in the layout editor. Ctrl+K anywhere
+       but in the editor, whose own Ctrl+K chords stay its own. -->
+  <button id="palette" class="icon" type="button" data-overflow="early" disabled title="Command palette (Ctrl+K)" aria-label="Command palette Ctrl K"><span class="icon-glyph" aria-hidden="true">&#x2315;</span><span class="menu-word">Command palette <kbd>Ctrl K</kbd></span></button>
+
   <span id="versions" class="versions"></span>
   <!-- An "i" at desk width, where it is the last thing in a row of words, and
        the word itself in the phone's menu - the glyph alone read as a stray
        character there, on a row of its own. -->
   <button id="about" class="ghost about-button" type="button" data-overflow="early"
-          title="About this playground - what it is, how it works and where it stops (?)" aria-label="About this playground: what it is, how it works and where it stops"><span class="icon-glyph" aria-hidden="true">i</span><span class="menu-word">About</span></button>
+          title="Help - what the playground does, how it works, where it stops, and its keys (?)" aria-label="Help: what the playground does, how it works, where it stops, and its keys"><span class="icon-glyph" aria-hidden="true">i</span><span class="menu-word">Help</span></button>
 
   <!-- The end of the row, the same three in every abap2UI5 tool's bar
        (family.mjs): Export (export-menu.mjs - abapGit, the ABAP, a link, the
@@ -320,17 +324,24 @@
        wider the button is not shown. Its label is written from what is in it. -->
   <div class="toolbar-more">
     <button id="toolbar-more" class="icon" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolbar-menu"
-            title="More: Format, Auto, UI5, ABAP, Share, Source, Compare, Reset, App in new tab, About, Export, Full screen, Appearance" aria-label="More: Format, Auto, UI5, ABAP, Share, Source, Compare, Reset, App in new tab, About, Export, Full screen, Appearance">&#x22EF;</button>
+            title="More: Format, Auto, UI5, ABAP, Source, Compare, Reset, App in new tab, Help, Command palette, Export, Full screen, Appearance" aria-label="More: Format, Auto, UI5, ABAP, Source, Compare, Reset, App in new tab, Help, Command palette, Export, Full screen, Appearance">&#x22EF;</button>
     <div id="toolbar-menu" class="toolbar-menu" hidden></div>
   </div>
 </div>
 
 <dialog id="about-dialog" class="about" aria-labelledby="about-title">
   <form method="dialog" class="about-head">
-    <h2 id="about-title">abap2UI5 Playground</h2>
+    <h2 id="about-title">Playground - help</h2>
     <button class="ghost" aria-label="Close">✕</button>
   </form>
+  <!-- The help every abap2UI5 tool opens on `?` (family.mjs HELP): what this
+       tool does, then its keys - the same two sections under the same
+       headings in all four, the title HELP.title( ) of the tool's name.
+       main.mjs (setUpHelp) shows the section of the page it is on and writes
+       the key table; the credits and the versions below are the site's. -->
   <div class="about-body">
+    <h3 class="help-head" id="help-about-head">What this tool does</h3>
+    <div class="help-about" data-tool="playground">
     <p>
       ABAP on the left, the app it produces on the right, and nothing in between
       but the browser. No server, no SAP system, no backend of any kind — the
@@ -384,6 +395,47 @@
         is the whole point of them.</li>
     </ul>
 
+    <h3>Where it stops</h3>
+    <p>
+      A few classes, not a package: no tables of your own, no message classes,
+      no CDS. Nothing reaches outside the browser — no RFC, no files. Only what
+      the transpiler implements, and only the UI5 libraries built in. Your code
+      is kept in this browser; the app's data is not.
+    </p>
+
+    </div>
+    <div class="help-about" data-tool="ai" hidden>
+      <p>
+        Describe the app you need, in a sentence or with a specification, a
+        screenshot or an Excel sheet attached. Claude writes it as one abap2UI5
+        class, runs it here in the browser - no SAP system - and fixes what the
+        syntax check and the abap2UI5 linter find. Ask for changes until it
+        fits, then take it out with Export: a zip for abapGit, or the code
+        in another tool.
+      </p>
+      <p>
+        Your API key stays in this tab's memory for the visit and is sent only
+        to the server it was typed for. The release select in the bar is your
+        SAP system: the code is checked against it.
+      </p>
+    </div>
+    <div class="help-about" data-tool="pilot" hidden>
+      <p>
+        An abap2UI5 app runs on the right; Claude operates it while you watch.
+        Say what should happen - fill a form, check values, go through an
+        order list - and Claude reads the screen, fills the fields and presses
+        the buttons, in your browser. Take the controls yourself any time.
+      </p>
+      <p>
+        Change app opens another sample or a class of your own, Restart starts
+        it again on a fresh database, and What Claude sees shows the screen as
+        the model reads it. Your API key stays in this tab's memory for the
+        visit.
+      </p>
+    </div>
+    <h3 class="help-head" id="help-keys-head">Keyboard shortcuts</h3>
+    <table class="keys help-keys" aria-labelledby="help-keys-head"></table>
+
     <h3>Credits</h3>
     <p>
       The playground is mostly wiring. Kudos goes to the projects it is wired
@@ -412,32 +464,20 @@
       request. That is the thanks that reaches an open source project. Thank you.
     </p>
 
-    <h3>Keyboard</h3>
-    <dl class="about-keys">
-      <dt><kbd>Ctrl</kbd> <kbd>Enter</kbd></dt><dd>Run - the unit tests in a <code>.clas.testclasses.abap</code> file first, then the app; also <kbd>Ctrl</kbd> <kbd>S</kbd>, which a browser would otherwise spend on saving the page. <strong>Auto</strong> beside it presses Run for you, shortly after you stop typing</dd>
-      <dt><kbd>Ctrl</kbd> <kbd>Z</kbd> / <kbd>Y</kbd></dt><dd>Undo and redo, per file</dd>
-      <dt><kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>F</kbd></dt><dd>Format - every file that is open, the same as the { } in the bar</dd>
-      <dt><kbd>F1</kbd></dt><dd>Everything else the editor can do, by name</dd>
-      <dt><kbd>F12</kbd> / <kbd>F2</kbd></dt><dd>Go to the definition under the cursor / rename it</dd>
-      <dt><kbd>Esc</kbd></dt><dd>Close a dialog, or the name being typed for a new file</dd>
-      <dt><kbd>Esc</kbd> <kbd>Tab</kbd></dt><dd>Leave the editor for the next control (<kbd>Shift</kbd> <kbd>Tab</kbd> for the one before) - a plain <kbd>Tab</kbd> indents</dd>
-      <dt><kbd>?</kbd></dt><dd>This dialog - outside the editor and the fields, where a question mark is a character</dd>
-    </dl>
-
-    <h3>Where it stops</h3>
-    <p>
-      A few classes, not a package: no tables of your own, no message classes,
-      no CDS. Nothing reaches outside the browser — no RFC, no files. Only what
-      the transpiler implements, and only the UI5 libraries built in. Your code
-      is kept in this browser; the app's data is not.
-    </p>
-
     <p class="about-foot">
       <span id="about-versions"></span> ·
       <a href="https://github.com/abap2UI5/browser-playground" target="_blank" rel="noopener">source and issues</a> ·
       MIT
     </p>
   </div>
+</dialog>
+
+<!-- The command palette (palette.mjs): the layout editor's, in look and keys -
+     type to filter, Up/Down, Enter runs, Escape closes. -->
+<dialog id="cmdk" class="cmdk" aria-label="Command palette">
+  <input id="cmdk-input" placeholder="Run a command - type to filter…" autocomplete="off" spellcheck="false"
+         role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-label="Command">
+  <div id="cmdk-list" class="cmdk-list" role="listbox" aria-label="Commands"></div>
 </dialog>
 
 <!-- Share: the link is in the clipboard before this opens; what it adds is
@@ -586,14 +626,14 @@
   <header class="studio-bar" id="studio-bar" hidden>
     <span class="studio-brand"><a href="https://abap2ui5.github.io/" target="_self"><img src="favicon.png" alt="" width="20" height="20"><span class="studio-brand-name">abap2UI5</span></a>
       <details class="tool-switch" data-tool="ai"><summary class="tool-switch-name" title="The abap2UI5 tools - switch to another one">AI App Builder</summary></details></span>
-    <div class="studio-stages" role="tablist" aria-label="What the stage shows">
-      <button type="button" role="tab" data-stage="chat" class="studio-stage only-narrow" aria-selected="false">Chat</button>
+    <div class="studio-stages pill-tabs" role="tablist" aria-label="What the stage shows">
+      <button type="button" role="tab" data-stage="chat" class="studio-stage pill-tab only-narrow" aria-selected="false">Chat</button>
       <!-- App, Split, Code: the words and the order of every abap2UI5 tool
            (family.mjs WORDS). The data-stage values are the ones stored
            and read since before - "preview" is the app. -->
-      <button type="button" role="tab" data-stage="preview" class="studio-stage" aria-selected="false">App</button>
-      <button type="button" role="tab" data-stage="split" class="studio-stage only-wide" aria-selected="false">Split</button>
-      <button type="button" role="tab" data-stage="code" class="studio-stage" aria-selected="false">Code</button>
+      <button type="button" role="tab" data-stage="preview" class="studio-stage pill-tab" aria-selected="false">App</button>
+      <button type="button" role="tab" data-stage="split" class="studio-stage pill-tab only-wide" aria-selected="false">Split</button>
+      <button type="button" role="tab" data-stage="code" class="studio-stage pill-tab" aria-selected="false">Code</button>
     </div>
     <span class="studio-status" id="studio-status" role="status" aria-live="polite"></span>
     <!-- The reader's system: the same select as the workbench's (release-select.mjs). -->
@@ -621,9 +661,9 @@
     <button type="button" id="pilot-change" class="pilot-button" title="Open another app from the samples">Change app</button>
     <button type="button" id="pilot-restart" class="pilot-button" title="Start the app again on a fresh database">Restart</button>
     <span class="pilot-status" id="pilot-status" role="status" aria-live="polite"></span>
-    <div class="pilot-views" role="tablist" aria-label="What is on screen">
-      <button type="button" role="tab" data-view="chat" class="pilot-view" aria-selected="false">Chat</button>
-      <button type="button" role="tab" data-view="app" class="pilot-view" aria-selected="true">App</button>
+    <div class="pilot-views pill-tabs" role="tablist" aria-label="What is on screen">
+      <button type="button" role="tab" data-view="chat" class="pilot-view pill-tab" aria-selected="false">Chat</button>
+      <button type="button" role="tab" data-view="app" class="pilot-view pill-tab" aria-selected="true">App</button>
     </div>
     <button type="button" id="pilot-sees" class="pilot-button" aria-pressed="false"
             title="The screen as Claude reads it - the agent snapshot of the app">What Claude sees</button>
@@ -634,10 +674,10 @@
     <button type="button" id="pilot-fullscreen" class="pilot-icon" title="Full screen" aria-label="Full screen">⛶</button>
     <button type="button" id="pilot-theme" class="pilot-icon theme-switch" aria-label="Appearance" title="Appearance: as the system - click for light" data-theme-switch>◐</button>
   </header>
-  <nav class="tabs" role="tablist" aria-label="Panes">
-    <button class="tab is-active" data-pane="left" id="tab-left" role="tab" aria-selected="true"
+  <nav class="tabs pill-tabs" role="tablist" aria-label="Panes">
+    <button class="tab pill-tab is-active" data-pane="left" id="tab-left" role="tab" aria-selected="true"
             aria-controls="pane-left">Code</button>
-    <button class="tab" data-pane="right" id="tab-right" role="tab" aria-selected="false"
+    <button class="tab pill-tab" data-pane="right" id="tab-right" role="tab" aria-selected="false"
             aria-controls="pane-right">App</button>
   </nav>
 

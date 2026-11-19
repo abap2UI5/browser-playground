@@ -72,6 +72,13 @@ config rather than `tests/helpers.mjs`, because most specs open the page with
   2026-11 it is `--accent-text` (one-site.md).
 - `ui5-floor.spec.js` - the bar's UI5 select and Config → abap2UI5 lint kept in step,
   stored, and the check run again.
+- `help.spec.js` - `?` on the workbench, the studio and the Pilot: "<tool> -
+  help", what this tool does and the key table, each about its own page; the
+  status right after the main controls; Share through Export; the phone's
+  pill tabs alike on all three pages.
+- `palette.spec.js` - the command palette: Ctrl+K outside the editor and not
+  inside it, filter, arrows, Enter running Run, an appearance and an Export
+  entry, the ⌕ in the ⋯ menu, the studio's and the Pilot's commands.
 - `layout-editor.spec.js` - Open in Layout Editor's two hand-overs (`?src=`
   for an unchanged GitHub class, clipboard + `#playground=` otherwise).
 - `tables.spec.js` - a table of the reader's own, created afresh at every Run.

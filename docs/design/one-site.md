@@ -69,8 +69,28 @@ the Export menu's labels and the keys. What it makes the same in all four:
   editor), under `abap2ui5:abap-release` - the playground keeps abaplint's
   version there beside its own settings (`checker-settings.mjs`) and opens
   on what another tool chose.
-- **The keys**: Ctrl+Enter runs, Ctrl+S keeps a draft in this browser, `?`
-  is help.
+- **The keys**: Ctrl+Enter runs, Ctrl+S keeps a draft in this browser,
+  Ctrl+K opens the command palette (outside a code editor - Monaco keeps its
+  own Ctrl+K chords), `?` is help.
+- **The help** (`HELP`, `help.mjs`): "<tool> - help", first what this tool
+  does, then its keyboard shortcuts as a table - the layout editor's two
+  sections, in that order. The workbench, the studio and the Pilot each show
+  their own section of the one `#about-dialog`.
+- **The command palette** (`palette.mjs`, `palette-commands.mjs`): the
+  layout editor's look and keys - type to filter, Up/Down, Enter runs,
+  Escape closes - over the actions the bar already has, each command
+  pressing the control the page carries.
+- **The status**: one muted line right after the tool's main controls,
+  left-aligned - after Run and Auto, after the studio's stages, after the
+  Pilot's Restart - never pushed to the end of the bar, and said once on a
+  screen (not again in the studio's empty app frame).
+- **Tabs** are one segment of pills (`.pill-tabs`): the workbench's
+  Code | App on a phone, the studio's stages, the Pilot's Chat | App.
+- **The UI5 releases** a tool offers (`UI5_RELEASES`, `ui5Label( )`): the
+  playground's "UI5 check" and the layout editor's preview field list the
+  same, "latest" on top.
+- **No Share button**: the Share dialog is the workbench's Export entry
+  "Share & embed…" - Export is every tool's way out.
 - **The words**: the running app is "App" (the studio's App | Split | Code,
   the workbench's Code | App on a phone), what would break the code is
   "Problems", a named copy in this browser is a "Draft".

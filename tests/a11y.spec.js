@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { open } from "./helpers.mjs";
+import { open, openShare } from "./helpers.mjs";
 
 // The page's own markup against axe-core's WCAG 2.x A/AA rules: the bar, the
 // file strip, the panel, the dialogs and the phone's menu, light and dark.
@@ -47,7 +47,7 @@ for (const theme of ["light", "dark"]) {
     await check(page, "the samples dialog");
     await page.keyboard.press("Escape");
 
-    await page.locator("#share").click();
+    await openShare(page);
     await expect(page.locator("#share-dialog")).toBeVisible();
     await check(page, "the share dialog");
     await page.keyboard.press("Escape");

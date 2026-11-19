@@ -53,7 +53,7 @@ import { STALLED, startRuntime } from "./runtime-client.mjs";
 import { removeStored } from "./storage.mjs";
 import { isDark, onThemeChange, setUpTheme } from "./theme.mjs";
 import { setUpToolSwitch } from "./tool-switch.mjs";
-import { closeOnBackdrop, describeError, setStatus, showOutput } from "./ui.mjs";
+import { describeError, setStatus, showOutput } from "./ui.mjs";
 import { warmUpAppFrame } from "./warm-up.mjs";
 import { aiPage, appOnly, cameFromCatalogue, catalogueQuery, embedded, keepsDrafts, params, frameIsolated, pilotPage } from "./page.mjs";
 import { FROM_LAST_SESSION, startingFiles } from "./starting-files.mjs";
@@ -71,13 +71,14 @@ import { setUpUi5Floor } from "./ui5-floor.mjs";
 import { setUpExportMenu, setUpFullScreen } from "./export-menu.mjs";
 import { setUpReleaseSelects } from "./release-select.mjs";
 import { saveDraft } from "./drafts.mjs";
+import { setUpHelp } from "./help.mjs";
+import { setUpPalette } from "./palette-commands.mjs";
 
 const runButton = document.getElementById("run");
 const autorunButton = document.getElementById("autorun");
 const undoButton = document.getElementById("undo");
 const redoButton = document.getElementById("redo");
 const formatButton = document.getElementById("format");
-const shareButton = document.getElementById("share");
 const fullscreenButton = document.getElementById("fullscreen");
 const examplesButton = document.getElementById("examples");
 
@@ -247,7 +248,8 @@ async function boot() {
     lastRunText: lastRun,
   });
   setUpSplitter();
-  setUpAbout();
+  // The help on `?` and the "i" (help.mjs): what this tool does, its keys.
+  setUpHelp(aiPage ? "ai" : pilotPage ? "pilot" : "playground");
   const tabs = setUpTabs(appOnly);
 
   // The files, as a promise the registry build can hold: the corpus parse does
@@ -324,7 +326,7 @@ async function boot() {
       m.setUpExamples(examplesHandlers);
       return m;
     }));
-  const openExamples = () => examplesReady().then((m) => m.openExamples());
+  const openExamples = (options) => examplesReady().then((m) => m.openExamples(options));
 
   try {
     setStatus("loading the ABAP runtime…");
@@ -375,7 +377,7 @@ async function boot() {
     return;
   }
 
-  for (const control of [autorunButton, formatButton, shareButton, fullscreenButton, examplesButton]) {
+  for (const control of [autorunButton, formatButton, fullscreenButton, examplesButton]) {
     control.disabled = false;
   }
   // Run is the one control with more than "the page has started" to say about
@@ -385,6 +387,12 @@ async function boot() {
   setUpOriginal();
   setUpUi5Floor();
   setUpBarEnd();
+  // Ctrl+K and the bar's ⌕ (palette-commands.mjs): every action of the page by name.
+  setUpPalette({
+    tool: aiPage ? "ai" : pilotPage ? "pilot" : "playground",
+    openSamples: aiPage || pilotPage ? undefined : openExamples,
+    showPanel: (which) => showInsight(which),
+  });
 
   if (chat) setUpStudio(chat);
   if (pilot) setUpPilotHooks(pilot, { openSamples: () => openExamples() });
@@ -433,7 +441,6 @@ async function boot() {
       showOutput("Format", String(e?.message ?? e));
     }
   });
-  shareButton.addEventListener("click", () => share());
   fullscreenButton.addEventListener("click", () => openFullScreen());
   examplesButton.addEventListener("click", () => openExamples());
   // The samples browser's chunk, fetched once the page is idle - so the first
@@ -524,27 +531,6 @@ async function boot() {
 function checked(problems) {
   updateInsight(problems);
   if (!pilotPage) reflectCodeErrors(problems);
-}
-
-// The credits, and what this is. Wired outside boot()'s try/catch and before
-// the runtime is awaited, so it still opens on a page whose startup failed -
-// that is exactly when somebody wants the link to the issue tracker.
-function setUpAbout() {
-  const dialog = document.getElementById("about-dialog");
-  document.getElementById("about").addEventListener("click", () => dialog.showModal());
-  document.getElementById("about-from-placeholder")?.addEventListener("click", () => dialog.showModal());
-  // `?` opens it too - the key a stranger presses on a page with a keyboard
-  // list. Only where a question mark is not a character: not in the editor,
-  // not in a field, not while a dialog already has the screen.
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "?" || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (e.target instanceof Element
-        && e.target.closest(".monaco-editor, input, textarea, select, [contenteditable=\"true\"], dialog")) return;
-    e.preventDefault();
-    if (!dialog.open) dialog.showModal();
-  });
-  // A click on the backdrop closes it, the way a modal is expected to.
-  closeOnBackdrop(dialog);
 }
 
 // A different file is now on screen: the outline is about that file, and so is
@@ -709,7 +695,7 @@ function keepAsDraft() {
     return;
   }
   if (!keepsDrafts) {
-    sayBriefly("an embedded playground keeps no drafts - Share makes a link");
+    sayBriefly("an embedded playground keeps no drafts - Export makes a link");
     return;
   }
   const files = getFiles();

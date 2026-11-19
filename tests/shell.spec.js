@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { addNamedFile, allowClipboard, clickEditor, getSource, MAIN_CLASS, MAIN_FILE, MAIN_MARK, open, runSample, SAMPLES, setSource, zipEntries } from "./helpers.mjs";
+import { addNamedFile, allowClipboard, clickEditor, getSource, MAIN_CLASS, MAIN_FILE, MAIN_MARK, open, runSample, SAMPLES, setSource, zipEntries, openShare } from "./helpers.mjs";
 
 // A sample other than the one the page opens on - it brings its own class name,
 // which is what makes replacing a draft with it interesting.
@@ -16,7 +16,7 @@ test("Share puts the code in the address bar and the link brings it back", async
 
   const source = (await getSource(page)).replace(MAIN_MARK, MARKER);
   await setSource(page, source);
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#status")).toContainText("link", { timeout: 15000 });
 
   const shared = page.url();
@@ -45,7 +45,7 @@ test("a share link is the code and nothing else - the page's own query does not 
   // edited beyond recognition, and the class's raw URL twice over.
   await page.goto("/?from=catalogue&back=q%3Dhello");
   await expect(page.locator("#status")).toHaveText("running", { timeout: 120000 });
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#status")).toContainText("link", { timeout: 15000 });
   const shared = new URL(page.url());
   expect(shared.search).toBe("");
@@ -57,7 +57,7 @@ test("editing after a share retires the link, and the reload keeps the edits", a
   await open(page);
 
   await setSource(page, (await getSource(page)).replace(MAIN_MARK, "the shared version"));
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#status")).toContainText("link", { timeout: 15000 });
   expect(page.url()).toContain("#");
 
@@ -496,7 +496,7 @@ test("one row: the brand, the tool's name as the menu of the four tools, the wor
 test("the toolbar's controls sit inside a landmark", async ({ page }) => {
   await open(page);
   await expect(page.getByRole("region", { name: "Workbench" })).toBeVisible();
-  for (const id of ["#undo", "#examples", "#run", "#autorun", "#status", "#share", "#source-link", "#fullscreen", "#about"]) {
+  for (const id of ["#undo", "#examples", "#run", "#autorun", "#status", "#export", "#source-link", "#fullscreen", "#palette", "#about"]) {
     const inside = await page.locator(id).evaluate((el) => el.closest('[role="region"][aria-label], header, nav, main, aside') !== null);
     expect(inside, `${id} is inside a landmark`).toBe(true);
   }
@@ -508,7 +508,7 @@ test("the toolbar's controls sit inside a landmark", async ({ page }) => {
 test("the word that the link was copied goes again", async ({ page, context, browserName }) => {
   await allowClipboard(context, browserName);
   await open(page);
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#status")).toContainText("link", { timeout: 15000 });
   await page.keyboard.press("Escape");
   await expect(page.locator("#status")).toHaveText("running", { timeout: 10000 });
@@ -537,11 +537,11 @@ test("the header keeps to a few rows on a phone", async ({ page }) => {
   }
   await page.locator("#toolbar-more").click();
   await expect(page.locator("#toolbar-more")).toHaveAttribute("aria-expanded", "true");
-  for (const id of ["#format", "#theme", "#autorun", "#share", "#source-link", "#fullscreen", "#about", "#export", "#page-fullscreen", "#ui5-floor", "#abap-release"]) {
+  for (const id of ["#format", "#theme", "#autorun", "#source-link", "#fullscreen", "#palette", "#about", "#export", "#page-fullscreen", "#ui5-floor", "#abap-release"]) {
     await expect(page.locator(`#toolbar-menu ${id}`)).toBeVisible();
   }
-  // Each says what it is in words there - the About button is not a stray "i".
-  await expect(page.locator("#about")).toHaveText("About", { useInnerText: true });
+  // Each says what it is in words there - the Help button is not a stray "i".
+  await expect(page.locator("#about")).toHaveText("Help", { useInnerText: true });
   await expect(page.locator("#format")).toHaveText("Format", { useInnerText: true });
   // Escape closes it, and so does a choice.
   await page.keyboard.press("Escape");
@@ -725,7 +725,7 @@ test("the AI App Builder and the AI Agent carry the same switch, last in their b
 test("the Share dialog offers an embed block, a markdown fence and an abapGit zip", async ({ page, context, browserName }) => {
   await allowClipboard(context, browserName);
   await open(page);
-  await page.locator("#share").click();
+  await openShare(page);
   const dialog = page.locator("#share-dialog");
   await expect(dialog).toBeVisible();
   // The sample ran, not a link's code: the Gist section asks nothing first.
@@ -848,7 +848,7 @@ test("?gist= opens a gist's ABAP with the app first, and the Share dialog writes
       body: JSON.stringify({ id: "fedcba9876543210fedc", html_url: "https://gist.github.com/fedcba9876543210fedc" }),
     });
   });
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#share-dialog")).toBeVisible();
   // The gist's code ran in this page, so it could read a token typed here:
   // the field waits for the reader to say they trust the link.
@@ -872,7 +872,7 @@ test("?gist= opens a gist's ABAP with the app first, and the Share dialog writes
 
   // Said once per visit: the next open asks nothing again.
   await page.keyboard.press("Escape");
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#share-dialog")).toBeVisible();
   await expect(page.locator("#share-gist-caution")).toHaveCount(0);
   await expect(page.locator("#share-gist-token")).toBeEnabled();
@@ -901,12 +901,12 @@ test("a narrow desk keeps the row and puts the rarely used five in the menu", as
   await open(page);
   const more = page.locator("#toolbar-more");
   await expect(more).toBeVisible();
-  await expect(more).toHaveAttribute("aria-label", "More: Check against UI5, ABAP release, Compare, Reset, App in new tab, About, Full screen");
-  for (const id of ["#format", "#autorun", "#share", "#source-link"]) {
+  await expect(more).toHaveAttribute("aria-label", "More: UI5 check, ABAP release, Compare, Reset, App in new tab, Command palette, Help, Full screen");
+  for (const id of ["#format", "#autorun", "#source-link", "#export"]) {
     await expect(page.locator(`.toolbar > ${id}`)).toBeVisible();
   }
   await more.click();
-  for (const id of ["#ui5-floor", "#abap-release", "#compare", "#reset-original", "#fullscreen", "#about", "#page-fullscreen"]) {
+  for (const id of ["#ui5-floor", "#abap-release", "#compare", "#reset-original", "#fullscreen", "#palette", "#about", "#page-fullscreen"]) {
     await expect(page.locator(`#toolbar-menu ${id}`)).toBeVisible();
   }
   await page.locator("#about").click();
@@ -917,7 +917,7 @@ test("a narrow desk keeps the row and puts the rarely used five in the menu", as
   await page.keyboard.press("Escape");
   await page.setViewportSize({ width: 1440, height: 900 });
   await expect(page.locator(".toolbar > #fullscreen")).toBeVisible();
-  await expect(more).toHaveAttribute("aria-label", "More: Check against UI5, ABAP release");
+  await expect(more).toHaveAttribute("aria-label", "More: UI5 check, ABAP release");
   await page.setViewportSize({ width: 1600, height: 900 });
   await expect(more).toBeHidden();
   await expect(page.locator(".toolbar > #ui5-floor, .toolbar > .ui5-floor")).toHaveCount(2);

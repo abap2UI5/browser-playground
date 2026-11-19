@@ -149,7 +149,8 @@ deploy — readers get the published playground, never your checkout.
   writes have none, and the buttons say so in their tooltip rather than
   disappearing. `tests/original.spec.js` holds them.
 - **Open in Layout Editor** (`src/shell/layout-editor.mjs`, a section of the
-  Share dialog, `tests/layout-editor.spec.js`) hands the app class - the first
+  Share dialog - which opens from Export → "Share & embed…", the bar has no
+  Share button of its own - `tests/layout-editor.spec.js`) hands the app class - the first
   file only; the layout editor edits one class - to
   [abap2UI5/browser-layout-editor](https://abap2ui5.github.io/browser-layout-editor/), the way
   back from its long-standing "Open in Playground". Two hand-overs: an app

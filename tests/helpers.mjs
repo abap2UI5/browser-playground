@@ -202,3 +202,15 @@ export function zipEntries(bytes) {
   }
   return entries;
 }
+
+// The Share dialog, through Export -> "Share & embed…": the bar has no Share
+// button of its own any more (the Export menu is every abap2UI5 tool's way
+// out, family.mjs). Inside the ⋯ menu where the row is narrow.
+export async function openShare(page) {
+  const more = page.locator("#toolbar-more");
+  if (await more.isVisible()) {
+    await more.click();
+  }
+  await page.locator("#export > summary").click();
+  await page.locator("#export-share-embed").click();
+}

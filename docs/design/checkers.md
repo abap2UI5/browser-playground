@@ -19,10 +19,12 @@
   are off here (`settingsFor( )`): the buffer is not a serialised file, and the
   abapGit zip normalises all three on the way out (`src/shell/export.mjs`).
 
-**The bar's UI5 select** ("UI5", after Auto; "Check against UI5" in the
-phone's ⋯ menu - `src/shell/ui5-floor.mjs`, `tests/ui5-floor.spec.js`) is the
-linter's floor, offered as 1.71, 1.84, 1.96, 1.108, 1.120 and `latest
-(<UI5_VERSION>)`, the release this site carries; a floor typed into the tab
+**The bar's UI5 select** ("UI5 check", after Auto and in the ⋯ menu -
+`src/shell/ui5-floor.mjs`, `tests/ui5-floor.spec.js`) is the linter's floor,
+offered as `latest (<UI5_VERSION>)`, the release this site carries, on top of
+family.mjs's `UI5_RELEASES` (1.71 "oldest supported", 1.84, 1.96, 1.108,
+1.120, 1.136 - the list the layout editor's preview field offers too); its
+title says the app runs on the site's UI5 regardless; a floor typed into the tab
 that is not on the list is shown as itself. It is the SAME setting the
 **Config → abap2UI5 lint** edits as JSON (`ui5`), not a second one: a change goes
 through `applyLinterSettings( )` and is kept by `keepLinterSettings( )` exactly

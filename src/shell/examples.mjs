@@ -523,8 +523,12 @@ function reflect() {
   for (const p of PICKS) facet[p].value = picks[p];
 }
 
-export function openExamples() {
+/** The samples dialog; with `drafts`, opened at the drafts (the command
+ *  palette's "Drafts…"), their section unfolded and in view.
+ *  @param {{ drafts?: boolean }} [options] */
+export function openExamples(options = {}) {
   if (!dialog) return;
+  if (options.drafts) draftsOpen = true;
   draftName = "";
   // Read afresh on every open: another tab may have saved one meanwhile.
   draftsCache = undefined;
@@ -572,6 +576,7 @@ export function openExamples() {
   // the focus back after the typing has gone to the app is still empty.
   dialog.showModal();
   search.select();
+  if (options.drafts) dialog.querySelector(".examples-drafts")?.scrollIntoView({ block: "start" });
 }
 
 function render() {

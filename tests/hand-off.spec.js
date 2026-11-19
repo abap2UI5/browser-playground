@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { inflateRawSync } from "node:zlib";
-import { getSource, MAIN_FILE, open } from "./helpers.mjs";
+import { getSource, MAIN_FILE, open, openShare } from "./helpers.mjs";
 
 // The files on screen handed to another tool in a new tab
 // (src/shell/hand-off.mjs): the Export menu every bar ends with
@@ -169,7 +169,7 @@ test("Export's Copy ABAP and Copy share link put the code into the clipboard, an
 test("the playground's Share dialog hands the code to the AI Agent, which asks before it runs it", async ({ page }) => {
   await open(page);
   const source = await getSource(page);
-  await page.locator("#share").click();
+  await openShare(page);
   await expect(page.locator("#share-dialog")).toBeVisible();
   const [tab] = await Promise.all([page.waitForEvent("popup"), page.locator("#share-pilot").click()]);
   await tab.waitForURL(/\/pilot\/#2/);

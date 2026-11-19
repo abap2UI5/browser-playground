@@ -70,7 +70,13 @@ export function setUpTheme({ restore = true } = {}) {
 }
 
 export function toggleTheme() {
-  const next = nextAppearance(choice ?? "");
+  setAppearance(nextAppearance(choice ?? ""));
+}
+
+/** One of the three states, chosen by name - the command palette's
+ *  "Appearance: …" (palette-commands.mjs).
+ *  @param {"" | "light" | "dark"} next */
+export function setAppearance(next) {
   if (next) {
     choice = next;
     writeStored(THEME_KEY, next);

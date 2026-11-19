@@ -61,7 +61,12 @@ jobs:
   # (Playwright's --shard), a fourth runs WebKit, and the wall clock is the
   # build plus a third of the tests.
   test:
-    runs-on: ubuntu-latest
+    # The WebKit shard on Ubuntu 24.04: ubuntu-latest became 26.04 in
+    # November 2026, and Playwright's WebKit build links against ICU 74,
+    # which 26.04 no longer has (MiniBrowser: "libicudata.so.74: cannot open
+    # shared object file" - every WebKit test failed at launch). Move it back
+    # to ubuntu-latest once the pinned Playwright ships a WebKit for 26.04.
+    runs-on: ${{ matrix.shard == 'webkit' && 'ubuntu-24.04' || 'ubuntu-latest' }}
     timeout-minutes: 30
     env:
       # The same tests as check.yml, which means the WebKit project too:

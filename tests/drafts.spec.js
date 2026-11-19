@@ -82,7 +82,7 @@ test("a draft's name typed while the index is on its way is still there when it 
   await page.keyboard.type("my ");
   land();
   await expect(page.locator("#examples-count")).not.toHaveText("");
-  await expect(page.locator("#examples-body")).toContainText("Your drafts");
+  await expect(page.locator("#examples-body")).toContainText("Drafts");
   await page.keyboard.type("greeting");
   await expect(page.locator(".drafts-name")).toHaveValue("my greeting");
   await expect(page.locator(".drafts-name")).toBeFocused();

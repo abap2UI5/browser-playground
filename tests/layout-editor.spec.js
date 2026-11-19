@@ -51,3 +51,16 @@ test("an edited class goes in the clipboard and in the link's fragment", async (
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(edited);
   }
 });
+
+// The same hand-over from the Export menu at the end of the bar
+// (export-menu.mjs), the entry every abap2UI5 tool's menu has.
+test("the Export menu's Layout Editor opens the class the same way", async ({ page }) => {
+  await open(page);
+  await page.locator("#export > summary").click();
+  const [popup] = await Promise.all([page.waitForEvent("popup"), page.locator("#export-open-layout").click()]);
+  await popup.waitForURL(/browser-layout-editor/);
+  const url = new URL(popup.url());
+  expect(`${url.origin}${url.pathname}`).toBe(LAYOUT_EDITOR);
+  expect(new URL(url.searchParams.get("src")).pathname.endsWith(`/${MAIN_FILE}`)).toBe(true);
+  await expect(page.locator("#status")).toHaveText("opened in the Layout Editor, in a new tab");
+});

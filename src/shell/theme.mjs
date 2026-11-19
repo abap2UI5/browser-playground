@@ -1,30 +1,28 @@
 // Light or dark, for the whole page: the bar and the panels, the editor and
 // the app in its frame.
 //
-// The page follows the system until the switch says otherwise - the ☾/☀
-// button at the right of each tool's bar (the playground's workbench, the AI
-// App Builder's and the AI Agent's bar; one on screen at a time), under the
-// key the sample catalogue's switch uses, and it behaves the same way: a
-// choice is kept between visits, and a choice that equals what the system
-// says anyway is forgotten rather than stored, so a page that was switched
-// back agrees with the system again from then on and follows it when it
-// changes. That is the rule every stored setting here
-// follows (see checker-settings.mjs), and for the same reason: a stored copy
-// of the default is a preference nobody expressed.
+// Three states, the same in all four abap2UI5 tools (family.mjs): as the
+// system (◐), light (☀), dark (☾) - the button at the right end of each
+// tool's bar (the playground's workbench, the AI App Builder's and the AI
+// Agent's bar; one on screen at a time), a click goes on to the next. The key
+// is family.mjs's THEME_KEY, one for the origin, so the choice made in one
+// tool - the layout editor included - is the choice in the others: "light" or
+// "dark" is stored, "as the system" is the key removed.
 //
 // The choice is applied as `data-theme` on <html>, which is what shell.css
 // keys its palette on beside the media query. The inline script at the top of
 // index.html applies a stored choice before the first paint - a bar that
 // paints light and turns dark a second later, once this bundle has been
 // evaluated, is a flash on every visit - so that script repeats the read. It
-// is THEME_BOOT in theme-boot.mjs, written into the document by the build,
-// and the key read here is the one that file exports: the two cannot drift.
+// is THEME_BOOT in theme-boot.mjs, written into the document by the build; it
+// also moves a choice stored under the key of before (THEME_KEYS_BEFORE) to
+// the key, so by the time this runs there is one key to read.
 //
 // An embedded playground never restores a choice: a demo in somebody's
 // documentation page follows that page's reader's system, the same as it
 // never restores a draft or a checker setting.
 import { readStored, removeStored, writeStored } from "./storage.mjs";
-import { THEME_KEY } from "./theme-boot.mjs";
+import { THEME_KEY, appearanceTitle, APPEARANCE_GLYPH, nextAppearance } from "./family.mjs";
 
 const media = window.matchMedia("(prefers-color-scheme: dark)");
 const listeners = new Set();
@@ -72,13 +70,13 @@ export function setUpTheme({ restore = true } = {}) {
 }
 
 export function toggleTheme() {
-  const next = isDark() ? "light" : "dark";
-  if (next === system()) {
-    choice = null;
-    removeStored(THEME_KEY);
-  } else {
+  const next = nextAppearance(choice ?? "");
+  if (next) {
     choice = next;
     writeStored(THEME_KEY, next);
+  } else {
+    choice = null;
+    removeStored(THEME_KEY);
   }
   changed();
 }
@@ -87,17 +85,16 @@ function apply() {
   const root = document.documentElement;
   if (choice) root.dataset.theme = choice;
   else delete root.dataset.theme;
-  const dark = isDark();
+  const appearance = choice ?? "";
   for (const button of switchButtons) {
-    button.setAttribute("aria-checked", String(dark));
-    // A switch is named for what it turns on and says whether it is on; named
-    // for the action ("Switch to light"), a screen reader heard
-    // "Switch to light, on" while the page was dark. The tooltip keeps the
-    // action, for the eye; the glyph is the theme it switches to.
-    button.setAttribute("aria-label", "Dark theme");
-    button.title = dark ? "Switch to light theme" : "Switch to dark theme";
+    // A button with a name that does not change - in the phone's menu the
+    // word it shows is that name, "Appearance" - a title that says where it
+    // stands and where a click takes it, and the glyph for the state it is in.
+    button.setAttribute("aria-label", "Appearance");
+    button.title = appearanceTitle(appearance);
+    button.dataset.appearance = appearance || "system";
     const glyph = button.querySelector(".icon-glyph") ?? button;
-    glyph.textContent = dark ? "☀" : "☾";
+    glyph.textContent = APPEARANCE_GLYPH[appearance];
   }
 }
 

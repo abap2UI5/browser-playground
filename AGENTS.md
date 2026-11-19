@@ -26,7 +26,7 @@ read them before touching `tools/` or `src/runtime/`.
 
 | Module | Purpose |
 | --- | --- |
-| `main.mjs` | Boot and the bar: `boot()` caught as a whole, `remember()` (draft, studio build), `showSourceLink()`, Share/Full screen |
+| `main.mjs` | Boot and the bar: `boot()` caught as a whole, `remember()` (draft, studio build), `showSourceLink()`, Share/App in new tab, the bar's end (`setUpBarEnd()`), Ctrl+S (`keepAsDraft()`) |
 | `page.mjs` | Which page this is: `params`, `embedded`, `aiPage`, `pilotPage`, `appOnly`, `keepsDrafts`, `frameIsolated`, the catalogue query, the frame |
 | `starting-files.mjs` | `startingFiles()`: link, draft or sample; a failed link or a declined Pilot link with its files |
 | `run.mjs` | Run: compile, define, test, start; frame load and restart in place, `runWhenFree`/`withRunLock`, `pointAtDump`, `structuralProblem`, frame theme |
@@ -40,7 +40,10 @@ read them before touching `tools/` or `src/runtime/`.
 | `exercise-check.mjs` | Pure: `exercisesFrom()` (the build's read of abap2UI5/samples' `scripts/lib/exercises.json`) and `checkExercise()` (view, source, sourceNot, tests) |
 | `original.mjs`, `compare-dialog.mjs` | Compare (± Monaco diff dialog, chunk) and Reset (⟲) against the original; `unchangedRawUrl()` |
 | `layout-editor.mjs` | The Share dialog's "Open in Layout Editor" (`?src=` or clipboard + `#playground=`) |
-| `hand-off.mjs` | The files in another tool, in a new tab: the studio's "Open in…" (Playground, AI Agent), the Share dialog's "Open in AI Agent" |
+| `hand-off.mjs` | The files in another tool, in a new tab, its targets from `TOOLS`: the Export menus' Open in (Playground, AI App Builder, AI Agent), the Share dialog's "Open in AI Agent" |
+| `family.mjs` | What the four tools agree on, data only: `TOOLS`, the appearance key and states, the ABAP release key and `RELEASES`, `WORDS`, `EXPORT_ENTRIES`, `VSCODE_URI`, `KEYS`. abap2UI5/browser-layout-editor carries it byte for byte as `src/family.js` (its `test/family.test.mjs` compares) |
+| `export-menu.mjs` | The Export menu every bar ends with (`setUpExportMenu()`: abapGit, Copy ABAP, Copy share link, Open in, VS Code, the tool's own after a rule) and the browser's full screen (`setUpFullScreen()`) |
+| `release-select.mjs` | The ABAP release select of the workbench's and the studio's bars: abaplint's `version`, both ways with the Config tab |
 | `ui5-floor.mjs` | The bar's UI5 select: the linter's `ui5` floor, kept in step with Config → abap2UI5 lint |
 | `index.html` | The document; its inline script starts both workers, the wasm fetch and Monaco's preloads before the bundle arrives |
 | `shell.css` | The page's styles and the palette's original (`catalogue.css` copies it) |
@@ -51,9 +54,9 @@ read them before touching `tools/` or `src/runtime/`.
 | `persistence.mjs` | The draft and the file on screen between visits |
 | `drafts.mjs` | Named drafts (fifty at most), listed in the samples dialog |
 | `checker-settings.mjs` | What the two checkers' configurations (the Config tab) were last set to |
-| `theme.mjs` | The playground's light/dark switch, handed to editor and frame |
-| `theme-boot.mjs` | `THEME_BOOT`/`THEME_MENU`: the inline theme scripts every document carries (the one `localStorage` touch outside `storage.mjs`) |
-| `tool-switch.mjs` | `TOOLS`, the four abap2UI5 tools; the tool's name in every bar (playground, studio, Pilot) as the menu of all four. abap2UI5/browser-layout-editor carries the same list - change both |
+| `theme.mjs` | The appearance switch (as the system, light, dark), handed to editor and frame |
+| `theme-boot.mjs` | `THEME_BOOT`/`THEME_MENU`: the inline theme scripts every document carries (the one `localStorage` touch outside `storage.mjs`); the key and the three states are family.mjs's, the key of before moved once |
+| `tool-switch.mjs` | The tool's name in every bar (playground, studio, Pilot) as the menu of all four; `TOOLS` is family.mjs's, re-exported |
 | `files-ui.mjs` | The file strip: `+`, `+ table`, naming a file in place |
 | `share.mjs` | Share links: files in the fragment, deflate-raw + base64url |
 | `share-dialog.mjs`, `export.mjs`, `zip.mjs` | The Share dialog (link, embed block, markdown fence, Gist), the abapGit package layout (tables in `src/`, rows in `data/`), a stored zip written by hand |
@@ -287,7 +290,7 @@ Each bullet names the design doc that explains it. Keep them true.
 - View edit: what nobody edited is not rewritten; what it cannot do it refuses with a sentence, never guesses. The layout of a written chain is the linter's (`@abap2ui5/linter/chain-write`, the pinned release — change it in abap2UI5/linter and bump the pin); no second writer.
 
 **Phone** ([phone.md](docs/design/phone.md))
-- Below 820px the toolbar is one row and every `data-overflow` control moves into its ⋯ menu (the same element, still reachable); from 821 to 1279px only `data-overflow="early"` does (UI5 floor, Compare, Reset, Full screen, About); the status gives way with an ellipsis rather than wrapping the row; the panel starts folded; Run brings the app forward only when it started one; autorun never moves the caret or the pane.
+- Below 820px the toolbar is one row and every `data-overflow` control moves into its ⋯ menu (the same element, still reachable); from 821 to 1279px only `data-overflow="early"` does (Compare, Reset, App in new tab, About, full screen), and up to 1599px `data-overflow="settings"` (the UI5 floor, the ABAP release); the status gives way with an ellipsis rather than wrapping the row; the panel starts folded; Run brings the app forward only when it started one; autorun never moves the caret or the pane.
 
 **AI** ([ai-chat.md](docs/design/ai-chat.md), [ai-pilot.md](docs/design/ai-pilot.md))
 - A key or token is held in memory for the visit and never stored; a key goes only to the server it was typed for. The Pilot opens a link's code only after asking (the app steers the model); the Gist section asks once a link's code has run (the playground's frame is same-origin).
@@ -302,7 +305,8 @@ Each bullet names the design doc that explains it. Keep them true.
 - `#playground=` (the share fragment) is read by abap2UI5/browser-layout-editor too.
 - The catalogue build degrades per repository and never fails the build; `samples/apps.json` is a contract with abap2UI5/samples-site, which builds from it; the redirects and the 404 go out through `withPolicy()`.
 - The four tools - Playground, AI App Builder, AI Agent, and abap2UI5/browser-layout-editor - wear one look, the studio's ([one-site.md](docs/design/one-site.md)): the tool's name in the accent beside "abap2UI5" is the menu of all four (`tool-switch.mjs`), the work sits on 18px cards on the sunken page, pressed things are pills. A change to that look goes to the layout editor's `styles.css` too.
-- The playground's page is one row (brand, tool's name, workbench): no project bar, no search box. The light/dark switch (`[data-theme-switch]`, `theme.mjs`) sits at the right of each of the three bars - workbench, studio, Pilot - as the layout editor carries its own. The 404 keeps its bar.
+- What the four tools agree on lives in `src/shell/family.mjs`, data only, and the layout editor carries it byte for byte as `src/family.js` (its `test/family.test.mjs` compares, and the palette of `styles.css` against `shell.css`): change it here, copy it there unchanged. Every bar ends Export ▾ (`export-menu.mjs`), ⛶, the appearance switch (◐ ☀ ☾, `abap2ui5:theme`) last; the workbench and the studio carry the ABAP release select (`abap2ui5:abap-release`); Ctrl+Enter runs, Ctrl+S keeps a draft; the running app is "App", a named copy a "Draft".
+- The playground's page is one row (brand, tool's name, workbench): no project bar, no search box. The appearance switch (`[data-theme-switch]`, `theme.mjs`) is the last control of each of the three bars - workbench, studio, Pilot - as the layout editor carries its own. The 404 keeps its bar.
 - The bar and the menu exist once here, on the 404 (`tools/sample-frame.mjs`); the playground's page has the one row instead. The palette exists twice (`shell.css`, `catalogue.css`) — change them together. The bar carries no row of the other sites: the brand leads home, the menu names them (CONVENTION.md in abap2UI5/abap2UI5.github.io). Across the abap2UI5 sites only the family convention binds (CONVENTION.md in abap2UI5/abap2UI5.github.io: the brand goes home to https://abap2ui5.github.io/, one red accent); the documentation is a site of its own and borrows nothing from this one. `search-engine.mjs` is a copy of the docs repo's; a change to matching starts there.
 
 **Tests** ([testing.md](docs/design/testing.md))

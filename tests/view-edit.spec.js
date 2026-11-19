@@ -698,3 +698,38 @@ test("Properties: a new property is picked from the control's metadata at the UI
   await page.locator("#view-props-apply").click();
   await expect(page.locator("#status")).toContainText("colour is no property or event of sap.m.Button at UI5 1.71");
 });
+
+// The sheet in the layout editor's dress (its inspector,
+// abap2UI5/browser-layout-editor src/ui/inspector.js): sections by type, a
+// filter, "set only", a mark for what each value is - and with "set only"
+// off, the properties the control does not set as empty rows, "— default —".
+test("Properties: sections, filter and set only, as the layout editor's inspector has them", async ({ page }) => {
+  await open(page);
+  await runSample(page, SAMPLE);
+  await page.locator('[data-insight="view"]').click();
+  await expect(page.locator(".view-xml")).toContainText("<Button", { timeout: 30000 });
+  await page.locator("#view-properties").click();
+  await page.locator(".view-tree button").filter({ hasText: /^Button/ }).first().click();
+  await expect(page.locator("#view-prop-new-name")).toHaveAttribute("placeholder", /at UI5 1\.71/, { timeout: 30000 });
+  // Set only, at first: text under Content, press under Events, each marked.
+  await expect(page.locator("#view-props-only-set")).toBeChecked();
+  await expect(page.locator(".view-props-group > legend")).toHaveText(["Content", "Events"]);
+  await expect(page.locator('.view-prop:has(input[data-attr="text"]) .view-prop-kind')).toHaveText("Aa");
+  await expect(page.locator('.view-prop:has(input[data-attr="press"]) .view-prop-kind')).toHaveText("ƒx");
+
+  // Everything the control has, in the editor's order of sections.
+  await page.locator("#view-props-only-set").uncheck();
+  await expect(page.locator(".view-props-group > legend")).toHaveText(["Content", "Appearance", "Behaviour", "Events"]);
+  await expect(page.locator('.view-prop input[data-attr="enabled"]')).toHaveAttribute("placeholder", "— default (true) —");
+  // The filter hides rows, and sections left empty.
+  await page.locator(".view-props-filter").fill("enab");
+  await expect(page.locator(".view-prop:not([hidden])")).toHaveCount(2); // enabled, and the new-property row
+  await expect(page.locator(".view-props-group:not([hidden]) > legend")).toHaveText(["Behaviour"]);
+  // A value typed into an unset row is written; the empty ones are not.
+  await page.locator('.view-prop input[data-attr="enabled"]').fill("false");
+  await page.locator("#view-props-apply").click();
+  await expect(page.locator("#status")).toContainText("Button: written into the builder chain");
+  const abap = await getSource(page, APP);
+  expect(abap).toMatch(/n = `enabled`\s+v = `false`/);
+  expect(abap).not.toContain("n = `visible`");
+});

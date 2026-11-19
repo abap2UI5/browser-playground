@@ -245,11 +245,14 @@ talks to a model or needs a key.
   (`src/shell/target-system.mjs`). The model wrote 7.50 syntax whatever the
   reader's system was, and abaplint checked it at `v750`: a reader on 7.02
   downloaded a class that ran here and failed to activate at home. The
-  header's **target system** (`#chat-target`: 7.02-7.31, 7.40, 7.50+ /
-  S/4HANA, ABAP Cloud) IS abaplint's `version` - `setAbapRelease( )` on the
-  studio's host (`agent-hooks.mjs`) applies it the way the Config tab's Apply
-  does (the corpus parsed again, kept by `keepAbaplintSettings( )`, the
-  problems counted afresh), and `playgroundRules( )` is told the release on
+  bar's **ABAP release** (`#studio-release`, `release-select.mjs`: 7.02-7.31,
+  7.40, 7.50+ / S/4HANA, ABAP Cloud - family.mjs's RELEASES, the select the
+  workbench and the layout editor carry too) IS abaplint's `version`, applied
+  the way the Config tab's Apply does (the corpus parsed again, kept by
+  `keepAbaplintSettings( )` - which also keeps it under the shared
+  `abap2ui5:abap-release`, so the other tools open on it - the problems
+  counted afresh; `releaseChanged( )` in chat.mjs tells the conversation), and
+  `playgroundRules( )` is told the release on
   every request (`host.abapRelease( )`), with what it rules out - 7.02 gets
   no inline declarations or constructor expressions and is told the guide's
   7.50 examples are to be translated, Cloud gets released APIs only. A
@@ -305,13 +308,21 @@ talks to a model or needs a key.
   replaces to `AI_BUILDS_KEY` - one per app class, its last state, the
   newest first, eight at most, the oldest dropped when the storage is full.
   The welcome lists them under the last build (`resumeOffer( )`); one opened
-  becomes the current build and leaves the list. **Open in…** in the header
-  (`hand-off.mjs`) opens the files in the playground or the Agent in a new
-  tab, as a share link's fragment - the tab opened inside the click (a popup
-  blocker allows that, not a promise), its opener cut, the address set once
-  the files are encoded; never while a turn runs or on the untouched
-  starter. The Agent asks before it runs a link's code, as for any link.
-  `tests/hand-off.spec.js` holds both.
+  becomes the current build and leaves the list. The **Export** menu at the
+  end of the bar (`export-menu.mjs`, the same menu in every abap2UI5 tool:
+  Download for abapGit with HANDOVER.md, Copy ABAP, Copy share link, Open in
+  the Playground, the Layout Editor or the AI Agent, VS Code) opens the files
+  in another tool in a new tab, as a share link's fragment - the tab opened
+  inside the click (a popup blocker allows that, not a promise), its opener
+  cut, the address set once the files are encoded; never while a turn runs
+  or on the untouched starter (`exportGuard( )` in chat.mjs). The Agent asks
+  before it runs a link's code, as for any link. The other way round, the
+  studio opens a share fragment too (`studioStartingFiles( )` in
+  starting-files.mjs) - the playground's, the Pilot's or the layout editor's
+  Export - and asks first, as the Pilot does (linked-code.mjs: the model runs
+  the app and reads it); "no" starts on the empty class, and the last build
+  stays offered either way. Ctrl+S here only says the build is kept - it is,
+  on every change. `tests/hand-off.spec.js` holds it.
 - **A turn that is not getting anywhere ends, and the reader is asked.**
   Nothing ended a turn whose model kept calling tools, and every round is a
   billed request with the whole conversation read again. Two limits, both

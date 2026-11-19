@@ -100,6 +100,12 @@ shape; one it accepts (`strlen(x)` without blanks) was taken out again.
 
 ## What is kept between visits: the draft and the file on screen
 
+**Ctrl+S keeps a named draft** - the files under the app class's name, in the
+samples browser's Drafts (drafts.mjs), the same name again replacing itself -
+and is never the browser's "save page as". It used to run; the layout editor
+saved with it, and one key that meant two things in two tools of one family
+was one too many (family.mjs KEYS: Ctrl+Enter runs, Ctrl+S keeps).
+
 
 The **draft** follows the middle rule for the same reason: a file set identical
 to one of the samples the page carries is not stored (`isSample()` in
@@ -129,7 +135,7 @@ it keeps it in the Drafts list (`keepReplaced( )` in `drafts.mjs`: under the
 name it is already saved as when it is one of the drafts unchanged, otherwise
 in the one slot "Before the last pick"). The status line, after the run, says
 the true one — *running - your draft is one Undo away*, or *running - your
-draft is kept in Samples, under Your drafts, as "…"*. Only where storage
+draft is kept in Samples, under Drafts, as "…"*. Only where storage
 refuses the list does it fall back to *comes back if you reload*, which the
 stored draft makes true (it used to be the only sentence, and read as advice
 to reload the page). A share link, `?src=`, `?gist=`, a sample or a named
@@ -146,7 +152,7 @@ written back through `pushEditOperations` as **one edit per file**, so a single
 Ctrl+Z takes the whole thing back. Four operations keep that contract:
 Format, Fix them, a View edit, and **Reset to original** (`original.mjs`,
 through `replaceWith( )`: each file still open is rewritten in its model as
-one edit; a file added since goes to Your drafts with the rest of the work). Nothing without a correct answer is guessed
+one edit; a file added since goes to Drafts with the rest of the work). Nothing without a correct answer is guessed
 at — an icon that does not exist stays reported. Keep all of that true when
 changing anything near it.
 

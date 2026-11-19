@@ -254,9 +254,17 @@
 
   <!-- The abap2UI5 linter's UI5 floor, the `ui5` of the abap2UI5 lint tab -
        one setting with two faces (src/shell/ui5-floor.mjs fills it). -->
-  <label class="ui5-floor" data-overflow="early" title="Which UI5 release the abap2UI5 linter checks the view against - not the UI5 the app runs on, which is the newest">
+  <label class="ui5-floor" data-overflow="settings" title="Which UI5 release the abap2UI5 linter checks the view against - not the UI5 the app runs on, which is the newest">
     <span class="icon-glyph">UI5</span><span class="menu-word">Check against UI5</span>
     <select id="ui5-floor" disabled aria-label="Check against UI5"><option>1.71</option></select>
+  </label>
+
+  <!-- The reader's SAP system, abaplint's release - the Config tab's
+       setting, the same select the AI App Builder's and the layout editor's
+       bars carry (src/shell/release-select.mjs, family.mjs RELEASES). -->
+  <label class="ui5-floor abap-release" data-overflow="settings" title="Your SAP system: the ABAP release the syntax check holds the code to">
+    <span class="menu-word">ABAP release</span>
+    <select id="abap-release" class="release-select" disabled aria-label="ABAP release"><option>ABAP 7.50+ / S/4HANA</option></select>
   </label>
 
   <!-- The one channel the page reports through, and under ?view=full the only
@@ -280,26 +288,39 @@
        their titles say which of the two is missing. -->
   <button id="compare" class="icon" data-overflow="early" disabled title="Compare with the original" aria-label="Compare with original"><span class="icon-glyph" aria-hidden="true">&#xB1;</span><span class="menu-word">Compare with original</span></button>
   <button id="reset-original" class="icon" data-overflow="early" disabled title="Reset to the original" aria-label="Reset to original"><span class="icon-glyph" aria-hidden="true">&#x27F2;</span><span class="menu-word">Reset to original</span></button>
-  <button id="fullscreen" data-overflow="early" disabled title="Open the app on its own, in a new tab">Full screen</button>
+  <!-- The app on its own, in a tab of its own (?view=full) - not the
+       browser's full screen, which is the ⛶ at the end of the row, as in
+       every abap2UI5 tool's bar. -->
+  <button id="fullscreen" class="icon" data-overflow="early" disabled title="App in new tab - the app on its own" aria-label="App in new tab"><span class="icon-glyph" aria-hidden="true">&#x2197;</span><span class="menu-word">App in new tab</span></button>
 
   <span id="versions" class="versions"></span>
   <!-- An "i" at desk width, where it is the last thing in a row of words, and
        the word itself in the phone's menu - the glyph alone read as a stray
        character there, on a row of its own. -->
-  <!-- Light or dark (theme.mjs), the same button the AI App Builder's and the
-       AI Agent's bars carry beside their full screen button. -->
-  <button id="theme" class="icon theme-switch" type="button" role="switch" aria-checked="false" aria-label="Dark theme" data-theme-switch data-overflow><span class="icon-glyph" aria-hidden="true">☾</span><span class="menu-word">Dark theme</span></button>
   <button id="about" class="ghost about-button" type="button" data-overflow="early"
           title="About this playground - what it is, how it works and where it stops (?)" aria-label="About this playground: what it is, how it works and where it stops"><span class="icon-glyph" aria-hidden="true">i</span><span class="menu-word">About</span></button>
 
+  <!-- The end of the row, the same three in every abap2UI5 tool's bar
+       (family.mjs): Export (export-menu.mjs - abapGit, the ABAP, a link, the
+       other tools), the browser's full screen, and the appearance switch
+       (theme.mjs: as the system, light, dark), always last. -->
+  <details class="export-menu" id="export" data-overflow>
+    <summary class="export-button" title="Take the code out of the playground - abapGit, a link, another tool">Export <span aria-hidden="true">▾</span></summary>
+    <div class="export-list" role="menu" aria-label="Export"></div>
+  </details>
+  <button id="page-fullscreen" class="icon" type="button" data-overflow="early" title="Full screen" aria-label="Full screen"><span class="icon-glyph" aria-hidden="true">⛶</span><span class="menu-word">Full screen</span></button>
+  <button id="theme" class="icon theme-switch" type="button" aria-label="Appearance" title="Appearance: as the system - click for light" data-theme-switch data-overflow><span class="icon-glyph" aria-hidden="true">◐</span><span class="menu-word">Appearance</span></button>
+
   <!-- What the row has no room for (layout.mjs moves it in): on a phone
        everything marked data-overflow, on a narrow desk (821-1279px) only what
-       is marked data-overflow="early" - the UI5 floor, Compare, Reset, Full
-       screen and About, the things nobody needs on every Run. At 1280px and
+       is marked data-overflow="early" - Compare, Reset, App in new tab and
+       About, the things nobody needs on every Run - and up to 1599px the two
+       selects marked data-overflow="settings", the UI5 floor and the ABAP
+       release. At 1280px and
        wider the button is not shown. Its label is written from what is in it. -->
   <div class="toolbar-more">
     <button id="toolbar-more" class="icon" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="toolbar-menu"
-            title="More: Format, Auto, UI5, Share, Source, Compare, Reset, Full screen, About" aria-label="More: Format, Auto, UI5, Share, Source, Compare, Reset, Full screen, About">&#x22EF;</button>
+            title="More: Format, Auto, UI5, ABAP, Share, Source, Compare, Reset, App in new tab, About, Export, Full screen, Appearance" aria-label="More: Format, Auto, UI5, ABAP, Share, Source, Compare, Reset, App in new tab, About, Export, Full screen, Appearance">&#x22EF;</button>
     <div id="toolbar-menu" class="toolbar-menu" hidden></div>
   </div>
 </div>
@@ -460,7 +481,7 @@
       acts on what the app shows, and an app written by somebody you do not know can try to steer what Claude does here.
       Open it only if you trust where the link came from.</p>
     <form method="dialog" class="linked-actions">
-      <button type="submit" value="cancel">Open the sample instead</button>
+      <button type="submit" value="cancel" id="linked-cancel">Open the sample instead</button>
       <button type="submit" value="open" class="primary">Open the linked code</button>
     </form>
   </div>
@@ -567,15 +588,25 @@
       <details class="tool-switch" data-tool="ai"><summary class="tool-switch-name" title="The abap2UI5 tools - switch to another one">AI App Builder</summary></details></span>
     <div class="studio-stages" role="tablist" aria-label="What the stage shows">
       <button type="button" role="tab" data-stage="chat" class="studio-stage only-narrow" aria-selected="false">Chat</button>
-      <button type="button" role="tab" data-stage="preview" class="studio-stage" aria-selected="false">Preview</button>
-      <button type="button" role="tab" data-stage="code" class="studio-stage" aria-selected="false">Code</button>
+      <!-- App, Split, Code: the words and the order of every abap2UI5 tool
+           (family.mjs WORDS). The data-stage values are the ones stored
+           and read since before - "preview" is the app. -->
+      <button type="button" role="tab" data-stage="preview" class="studio-stage" aria-selected="false">App</button>
       <button type="button" role="tab" data-stage="split" class="studio-stage only-wide" aria-selected="false">Split</button>
+      <button type="button" role="tab" data-stage="code" class="studio-stage" aria-selected="false">Code</button>
     </div>
     <span class="studio-status" id="studio-status" role="status" aria-live="polite"></span>
-    <button type="button" id="studio-theme" class="studio-icon theme-switch" role="switch" aria-checked="false" aria-label="Dark theme" data-theme-switch>☾</button>
-    <button type="button" id="studio-fullscreen" class="studio-icon" title="Full screen" aria-label="Full screen">⛶</button>
+    <!-- The reader's system: the same select as the workbench's (release-select.mjs). -->
+    <select id="studio-release" class="release-select studio-release" aria-label="Your SAP system - the ABAP release the code is checked against"
+            title="Your SAP system: the ABAP release the code is written for and checked against"></select>
     <button type="button" id="studio-exit" class="studio-icon" title="Leave the AI App Builder - back to the playground"
             aria-label="Leave the AI App Builder">✕</button>
+    <details class="export-menu" id="studio-export">
+      <summary class="export-button" title="Take the app out of the AI App Builder - abapGit, a link, another tool">Export <span aria-hidden="true">▾</span></summary>
+      <div class="export-list" role="menu" aria-label="Export"></div>
+    </details>
+    <button type="button" id="studio-fullscreen" class="studio-icon" title="Full screen" aria-label="Full screen">⛶</button>
+    <button type="button" id="studio-theme" class="studio-icon theme-switch" aria-label="Appearance" title="Appearance: as the system - click for light" data-theme-switch>◐</button>
   </header>
   <!-- The AI Pilot's own bar (src/shell/pilot.mjs, "AI Pilot" in shell.css):
        the page pilot/index.html, written by the build from this one, where
@@ -596,12 +627,16 @@
     </div>
     <button type="button" id="pilot-sees" class="pilot-button" aria-pressed="false"
             title="The screen as Claude reads it - the agent snapshot of the app">What Claude sees</button>
-    <button type="button" id="pilot-theme" class="pilot-icon theme-switch" role="switch" aria-checked="false" aria-label="Dark theme" data-theme-switch>☾</button>
+    <details class="export-menu" id="pilot-export">
+      <summary class="export-button" title="Take the app out of the AI Agent - abapGit, a link, another tool">Export <span aria-hidden="true">▾</span></summary>
+      <div class="export-list" role="menu" aria-label="Export"></div>
+    </details>
     <button type="button" id="pilot-fullscreen" class="pilot-icon" title="Full screen" aria-label="Full screen">⛶</button>
+    <button type="button" id="pilot-theme" class="pilot-icon theme-switch" aria-label="Appearance" title="Appearance: as the system - click for light" data-theme-switch>◐</button>
   </header>
   <nav class="tabs" role="tablist" aria-label="Panes">
     <button class="tab is-active" data-pane="left" id="tab-left" role="tab" aria-selected="true"
-            aria-controls="pane-left">ABAP</button>
+            aria-controls="pane-left">Code</button>
     <button class="tab" data-pane="right" id="tab-right" role="tab" aria-selected="false"
             aria-controls="pane-right">App</button>
   </nav>
@@ -679,22 +714,10 @@
         <!-- Its options are written by chat-ui.mjs from src/shell/ai-speeds.mjs. -->
         <select id="chat-speed" class="chat-speed" aria-label="Model and how long it thinks"
                 title="Fast answers soonest; Thorough thinks longest. Applies from the next message."></select>
-        <!-- The reader's SAP system: the ABAP release abaplint checks the code
-             against, told to the model (src/shell/target-system.mjs). Its
-             options are written by chat.mjs. -->
-        <select id="chat-target" class="chat-speed chat-target" aria-label="Your SAP system - the ABAP release the code is checked against"
-                title="The ABAP release of the system the app is for: the syntax check holds the code to it, and Claude is told."></select>
-        <button type="button" id="chat-download" title="The files in the editor as an abapGit repository">Download for abapGit</button>
-        <!-- The build in another tool, in a new tab (src/shell/hand-off.mjs):
-             the playground to go on by hand, the AI Agent to have it used. -->
-        <details class="chat-open-in" id="chat-open-in">
-          <summary title="Open the files in another abap2UI5 tool, in a new tab">Open in…</summary>
-          <div class="chat-open-in-menu" role="menu">
-            <button type="button" role="menuitem" data-hand-off="playground"><b>Playground</b><span>go on by hand - editor, debugger, Share</span></button>
-            <button type="button" role="menuitem" data-hand-off="pilot"><b>AI Agent</b><span>have the AI use the app while you watch</span></button>
-          </div>
-        </details>
-        <button type="button" id="chat-export" class="ghost" title="The conversation as a markdown file">Export</button>
+        <!-- The reader's SAP system, Download for abapGit and Open in are in
+             the studio's bar (the release select, the Export menu), where
+             every abap2UI5 tool has them. -->
+        <button type="button" id="chat-export" class="ghost" title="The conversation as a markdown file">Save chat</button>
         <button type="button" id="chat-new" class="ghost" title="Start a new conversation - the files stay in the editor">New chat</button>
         <button type="button" id="chat-key-button" class="ghost" title="Your API key, and which model API answers">Key</button>
       </div>

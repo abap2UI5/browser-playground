@@ -4,8 +4,8 @@
 // the encoding alone, including the two links it must refuse.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { decodeFiles, encodeFiles } from "../../src/shell/share.mjs";
+import { deflateRawSync, inflateRawSync } from "node:zlib";
+import { decodeFiles, encodeFiles, vscodeUrl } from "../../src/shell/share.mjs";
 
 const FILES = [
   { name: "z2ui5_cl_app.clas.abap", source: "CLASS z2ui5_cl_app DEFINITION PUBLIC.\n  \" ünïcödé, `backticks`, |templates { 1 }|\nENDCLASS.\n" },
@@ -56,4 +56,14 @@ test("a link that inflates past the cap is given up on, not unpacked", async () 
   const bomb = "2" + base64url(deflateRawSync(Buffer.alloc(9 * 1024 * 1024, 0x61)));
   assert.ok(bomb.length < 64 * 1024);
   await assert.rejects(decodeFiles(bomb, "m"), /more code than the playground opens/);
+});
+
+// The VS Code extension's link (the Export menu's VS Code): the source
+// deflated and base64url'd as `code`, the file's name as `name` - what the
+// layout editor writes too (vscodeLink( ) in its src/handoff.js).
+test("the VS Code link carries the source deflated and the file's name", async () => {
+  const url = new URL(await vscodeUrl("vscode://abap2ui5.abap2ui5/open", FILES[0]));
+  assert.equal(`${url.protocol}//${url.host}${url.pathname}`, "vscode://abap2ui5.abap2ui5/open");
+  assert.equal(url.searchParams.get("name"), FILES[0].name);
+  assert.equal(inflateRawSync(Buffer.from(url.searchParams.get("code"), "base64url")).toString("utf8"), FILES[0].source);
 });

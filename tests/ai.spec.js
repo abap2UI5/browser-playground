@@ -2,6 +2,13 @@ import { readFileSync } from "node:fs";
 import { test, expect } from "@playwright/test";
 import { openConfig, zipEntries } from "./helpers.mjs";
 
+// Download for abapGit, from the Export menu at the end of the studio's bar
+// (export-menu.mjs) - where every abap2UI5 tool has it.
+const exportZip = async (page) => {
+  await page.locator("#studio-export > summary").click();
+  await page.locator("#studio-export-zip").click();
+};
+
 // The AI Studio (src/shell/chat.mjs, src/shell/ai-agent.mjs), on its own page
 // ai/index.html - the playground carries no way into it. No test talks to
 // a model: api.anthropic.com is answered here, with the server-sent events
@@ -107,13 +114,13 @@ test("the chat builds an app in the editor, runs it and tells the model what hap
   await openStudio(page);
   await saveKey(page);
   // AI turns the page into the studio: the site's bar and the toolbar step
-  // aside, the chat beside the app on the stage (Preview at this width).
+  // aside, the chat beside the app on the stage (App at this width).
   await expect(page.locator("body")).toHaveClass(/is-studio/);
   await expect(page.locator("header.bar")).toBeHidden();
   await expect(page.locator("#run")).toBeHidden();
   await expect(page.locator("#chat")).toBeVisible();
   await expect(page.locator("#app")).toBeVisible();
-  await expect(page.locator(".studio-stage[aria-selected=true]")).toHaveText("Preview");
+  await expect(page.locator(".studio-stage[aria-selected=true]")).toHaveText("App");
 
   await page.locator("#chat-input").fill("A page that says it was built by the model");
   await page.locator("#chat-input").press("Enter");
@@ -259,7 +266,7 @@ ENDCLASS.`;
 
   // The download carries the table in src/ and its rows in data/.
   const downloaded = page.waitForEvent("download");
-  await page.locator("#chat-download").click();
+  await exportZip(page);
   const entries = zipEntries(new Uint8Array(readFileSync(await (await downloaded).path())));
   expect(entries.map((e) => e.name)).toEqual(expect.arrayContaining(["src/zai_orders.tabl.xml", "data/zai_orders.tabu.json", "HANDOVER.md"]));
   // The record beside it: what was asked, the checks of the code as it is.
@@ -411,8 +418,8 @@ test("the target system in the header moves the syntax check, is told to the mod
   await openStudio(page);
   await saveKey(page);
   // The default is the release the editor checks against out of the box.
-  await expect(page.locator("#chat-target")).toHaveValue("v750");
-  await page.locator("#chat-target").selectOption("v702");
+  await expect(page.locator("#studio-release")).toHaveValue("v750");
+  await page.locator("#studio-release").selectOption("v702");
   await expect(page.locator("#status")).toHaveText("the code is checked against ABAP 7.02 - 7.31 now", { timeout: 120000 });
   await expect(page.locator(".chat-notice").last()).toContainText("Your system: ABAP 7.02 - 7.31");
 
@@ -433,7 +440,7 @@ test("the target system in the header moves the syntax check, is told to the mod
   // Kept like a setting typed into the Config tab.
   await page.reload();
   await expect(page.locator("#status")).toHaveText("ready - describe the app you want", { timeout: 120000 });
-  await expect(page.locator("#chat-target")).toHaveValue("v702");
+  await expect(page.locator("#studio-release")).toHaveValue("v702");
 });
 
 test("the download says what the model left to connect on the reader's system", async ({ page }) => {
@@ -457,7 +464,7 @@ test("the download says what the model left to connect on the reader's system", 
   await expect(page.locator(".chat-assistant").last()).toHaveText("Done.", { timeout: 90000 });
 
   const downloaded = page.waitForEvent("download");
-  await page.locator("#chat-download").click();
+  await exportZip(page);
   expect((await downloaded).suggestedFilename()).toMatch(/\.zip$/);
   const notice = page.locator(".chat-notice").last();
   await expect(notice).toContainText("Checked against ABAP 7.50+ / S/4HANA. 1 place is left to connect on your system");
@@ -492,7 +499,7 @@ test("without a key the welcome offers a model on the reader's own machine", asy
   await expect(page.locator(".chat-local")).toHaveCount(0);
 });
 
-test("the header follows a release applied in the Config tab", async ({ page }) => {
+test("the bar's release select follows a release applied in the Config tab", async ({ page }) => {
   await openStudio(page);
   await page.locator('.studio-stage[data-stage="code"]').click();
   await openConfig(page, "abaplint");
@@ -503,8 +510,8 @@ test("the header follows a release applied in the Config tab", async ({ page }) 
   await page.locator(".config-row .primary").click();
   await expect(page.locator(".config-said")).toContainText("applied", { timeout: 60000 });
   // A release the header does not list is added as abaplint names it.
-  await expect(page.locator("#chat-target")).toHaveValue("v757");
-  await expect(page.locator("#chat-target option:checked")).toHaveText("ABAP v757");
+  await expect(page.locator("#studio-release")).toHaveValue("v757");
+  await expect(page.locator("#studio-release option:checked")).toHaveText("ABAP v757");
 });
 
 // An app whose one abaplint error none of the edits below touches: each
@@ -584,7 +591,7 @@ test("a run's report says what CDS notation means in ABAP, and lists a CALL FUNC
   expect(second).toContain("not checked here (1)");
   expect(second).toMatch(/zcl_ai_app\.clas\.abap:\d+ CALL FUNCTION BAPI_SALESORDER_GETLIST/);
 
-  await page.locator("#chat-download").click();
+  await exportZip(page);
   await expect(page.locator(".chat-notice").last().locator("li")).toContainText("CALL FUNCTION BAPI_SALESORDER_GETLIST - not checked here");
 });
 
@@ -678,7 +685,7 @@ test("on a phone the studio opens on the chat, the stages take turns, and the ba
   expect(stage.y + stage.height).toBeLessThanOrEqual(844 + 1);
 
   // Every control of the bar is inside the screen.
-  for (const id of ["#studio-fullscreen", '.studio-stage[data-stage="code"]']) {
+  for (const id of ["#studio-theme", "#studio-export", "#studio-release", '.studio-stage[data-stage="code"]']) {
     const box = await page.locator(id).boundingBox();
     expect(box.x + box.width, id).toBeLessThanOrEqual(390);
   }

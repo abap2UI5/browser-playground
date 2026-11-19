@@ -204,6 +204,10 @@ body {
   .toolbar > [data-overflow="early"] { display: none; }
   .toolbar-more { display: block; flex: none; }
 }
+@media (min-width: 821px) and (max-width: 1599px) {
+  .toolbar > [data-overflow="settings"] { display: none; }
+  .toolbar-more { display: block; flex: none; }
+}
 .toolbar-menu {
   position: absolute; top: 100%; right: .4rem; margin-top: 2px;
   display: flex; flex-direction: column; gap: .25rem;
@@ -1189,6 +1193,19 @@ button.insight-row {
 .view-prop > span { font-family: var(--font-mono); color: var(--fg-dim); overflow: hidden; text-overflow: ellipsis; }
 .view-prop input { font: 12px var(--font-mono); padding: .2rem .4rem; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; }
 .view-prop.is-bound input { border-style: dashed; }
+/* The layout editor's inspector, as far as a sheet over the ABAP goes:
+   sections by type, a filter, "set only", and a mark for what each value is
+   (view-sheet.mjs). */
+.view-props-tools { display: flex; align-items: center; gap: .6rem; }
+.view-props-filter { flex: 1; min-width: 0; font: inherit; font-size: 12px; padding: .25rem .5rem; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--fg); }
+.view-props-only { display: inline-flex; align-items: center; gap: .3rem; color: var(--fg-dim); white-space: nowrap; }
+.view-props-group { display: grid; gap: .35rem; margin: .2rem 0 0; padding: .4rem 0 0; border: 0; border-top: 1px solid var(--line); min-width: 0; }
+.view-props-group[hidden] { display: none; }
+.view-props-group > legend { padding: 0 .3rem 0 0; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-dim); }
+.view-props-hint { margin: 0; color: var(--fg-dim); font-size: 11px; }
+.view-prop[hidden] { display: none; }
+.view-prop-kind { display: inline-block; min-width: 1.6em; margin-right: .3rem; color: var(--accent); font: 600 10px var(--font-ui); }
+.view-prop.is-unset > span { opacity: .75; }
 .view-prop-new { margin-top: .3rem; }
 @media (max-width: 820px) {
   .view-sheet-body { grid-template-columns: 1fr; }
@@ -1842,7 +1859,12 @@ body.is-studio[data-stage="chat"] .chat { grid-column: 1 / -1; }
   .studio-bar { flex-wrap: wrap; gap: 8px; padding: 8px 2px; }
   .studio-brand { margin-right: auto; }
   .studio-brand-name { display: none; }
-  .studio-stages { order: 3; flex: 1 1 100%; margin-left: 0; }
+  .studio-stages { order: 3; flex: 1 1 50%; margin-left: 0; }
+  /* The release select shares the stages' row; the browser's full screen
+     is a desk's wish (a phone's browser hides its own bar on scroll), as on
+     the Pilot's phone bar. */
+  .studio-release { order: 3; flex: 0 1 auto; max-width: 8.5rem; }
+  #studio-fullscreen { display: none; }
   button.studio-stage { flex: 1; }
   /* The status on a row of its own, while it says something: hidden
      outright, "edit the message and send it again", the release check's
@@ -1989,12 +2011,19 @@ body.is-studio .pane-right.is-flash { animation: studio-flash .9s ease-out; }
 /* The chat, dressed for the studio. */
 body.is-studio .chat-head { border-bottom: 1px solid var(--st-border); padding: .6rem .9rem; }
 body.is-studio .chat-title { display: none; }
+/* Every control of the chat card's head one size - the model, New chat, Key,
+   Save chat: one pill height, one padding, one type size. */
 body.is-studio .chat-head button,
 body.is-studio .chat-speed {
   background: transparent;
   color: var(--st-fg);
   border: 1px solid var(--st-border);
   border-radius: 999px;
+  height: 28px;
+  padding: 0 .75rem;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 26px;
 }
 body.is-studio .chat-usage { color: var(--st-dim); }
 body.is-studio .chat-key { background: transparent; border-bottom: 1px solid var(--st-border); }
@@ -2109,47 +2138,6 @@ body.is-studio .chat-suggestions { align-items: stretch; gap: .55rem; }
 /* The welcome's way in without a key (chat.mjs, offerLocalModel). */
 .chat-local,
 .pilot-local { margin: .9rem 0 0; font-size: 13px; }
-/* "Open in…" in the studio's header (hand-off.mjs): a <details> that opens
-   a small menu under it, the way the tool switch does. */
-.chat-open-in { position: relative; }
-.chat-open-in > summary {
-  list-style: none;
-  cursor: pointer;
-  padding: .25rem .7rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.chat-open-in > summary::-webkit-details-marker { display: none; }
-.chat-open-in[open] > summary { border-color: var(--accent); color: var(--accent); }
-.chat-open-in-menu {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 6px);
-  left: 0;
-  display: grid;
-  gap: 2px;
-  min-width: 16rem;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
-}
-.chat-open-in-menu button {
-  display: grid;
-  gap: 2px;
-  text-align: left;
-  padding: .45rem .6rem;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  font-size: 13px;
-}
-.chat-open-in-menu button:hover,
-.chat-open-in-menu button:focus-visible { background: var(--bg-sunken); }
-.chat-open-in-menu span { color: var(--fg-dim); font-size: 12px; }
 .chat-local-open,
 .pilot-local-open,
 .chat-key-open,
@@ -2372,6 +2360,12 @@ body.is-pilot .pane-right { grid-column: -2; grid-row: 2; }
   color: var(--pl-dim);
 }
 .pilot-app > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A narrow desk: the app's name gives way first, so the end of the bar -
+   Export, full screen, appearance - stays on screen. */
+@media (min-width: 821px) and (max-width: 1279px) {
+  .pilot-app { max-width: 12rem; flex: 0 1 auto; }
+  .pilot-bar .pilot-status { flex: 1 1 0; }
+}
 .pilot-live {
   flex: none;
   width: 8px;
@@ -2428,7 +2422,10 @@ body.is-pilot button.pilot-view[aria-selected="true"] { background: var(--pl-gra
   .pilot-app,
   #pilot-fullscreen { display: none; }
   body.is-pilot .pilot-bar .pilot-button { padding-inline: .7rem; }
-  .pilot-views { order: 3; flex: 1 1 100%; }
+  .pilot-views { order: 3; flex: 1 1 60%; }
+  /* Export shares the views' row: the first row is full with Change app,
+     Restart and the appearance switch. */
+  #pilot-export { order: 3; }
   body.is-pilot button.pilot-view { flex: 1; }
   .pilot-brand { margin-right: auto; }
   /* The status on a row of its own while it says something (as the
@@ -3061,7 +3058,7 @@ body.is-pilot button.pilot-attach:hover { border-color: var(--pl-signal); }
    page, Run in the accent with its glow - the same buttons the AI App
    Builder and the AI Agent carry in their bars. */
 .toolbar :is(button, .source-link) { border-radius: 999px; }
-.toolbar button:not(.primary):not(.invite):not(.ghost):not([aria-checked="true"]),
+.toolbar button:not(.primary):not(.invite):not(.ghost):not([aria-checked="true"]):not(.export-item),
 .toolbar .source-link { font-weight: 600; font-size: 13px; }
 .toolbar button.primary { box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 22%, transparent); }
 .toolbar button.icon { min-width: 32px; }
@@ -3088,3 +3085,83 @@ body.is-pilot button.pilot-attach:hover { border-color: var(--pl-signal); }
    somebody else's page, nor over an app on its own. */
 .is-embedded .theme-switch,
 .is-app-only .theme-switch { display: none; }
+.is-embedded .export-menu,
+.is-app-only .export-menu,
+.is-embedded #page-fullscreen,
+.is-app-only #page-fullscreen { display: none; }
+
+/* THE END OF EVERY BAR (family.mjs): Export, the browser's full screen, the
+   appearance switch - in this order, in all four tools; the layout editor's
+   styles.css draws the same. Export is a pill like the bar's other buttons,
+   its list a card hanging from its right edge (export-menu.mjs). */
+.export-menu { position: relative; display: inline-flex; flex: none; }
+.export-menu > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .3rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.export-menu > summary::-webkit-details-marker { display: none; }
+.export-menu > summary span { font-size: 11px; opacity: .7; }
+.export-menu > summary:hover,
+.export-menu[open] > summary { border-color: var(--accent); }
+.export-menu > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.export-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  gap: 1px;
+  min-width: 15rem;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+  text-align: left;
+}
+.export-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: .4rem .6rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+.toolbar .export-list button.export-item { border-radius: 8px; }
+.export-list button:hover,
+.export-list button:focus-visible { background: var(--bg-sunken); }
+.export-head { padding: .35rem .6rem .1rem; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-dim); }
+.export-rule { border: 0; border-top: 1px solid var(--line); margin: 4px 2px; }
+/* In the phone's ⋯ menu the list opens in place, under its summary. */
+.toolbar-menu .export-menu { display: block; }
+.toolbar-menu .export-menu > summary { border-radius: 5px; font-weight: 400; font-size: inherit; }
+.toolbar-menu .export-list { position: static; box-shadow: none; margin-top: 4px; min-width: 0; }
+/* The release select in the studio's bar, beside its status. */
+.release-select.studio-release {
+  font: inherit;
+  font-size: 12px;
+  padding: .25rem .4rem;
+  border: 1px solid var(--st-border, var(--line));
+  border-radius: 999px;
+  background: var(--st-surface, var(--bg));
+  color: var(--st-fg, var(--fg));
+}

@@ -293,16 +293,9 @@ a:hover { text-decoration: none; }
 .menu-sub { display: block; padding: 6px 10px 2px; font-size: 12px; color: var(--fg-dim); }
 .menu-repos a { padding: 4px 10px; }
 @media (max-width: 420px) { .menu-repos { columns: 1; } }
-/* The switch says what a press does, so it swaps its whole label with the
- * theme - over the same media query and data-theme the palette uses, so it
- * says the right thing before any script has run. */
-.when-dark { display: none; }
-:root[data-theme="dark"] .when-light { display: none; }
-:root[data-theme="dark"] .when-dark { display: inline; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .when-light { display: none; }
-  :root:not([data-theme="light"]) .when-dark { display: inline; }
-}
+/* The appearance switch's glyph and word are written by the menu script
+ * (THEME_MENU in src/shell/theme-boot.mjs): three states, as in every
+ * abap2UI5 tool. */
 
 /* The way out of this site, at the end of the bar the playground's own ends
  * with (src/shell/shell.css) - one hairline, then the two marks, the same size

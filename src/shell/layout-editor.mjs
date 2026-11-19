@@ -1,5 +1,6 @@
 // Open in Layout Editor - the way back to abap2UI5/browser-layout-editor, which has
-// had "Open in Playground" all along. A section of the Share dialog.
+// had "Open in Playground" all along. A section of the Share dialog, and an
+// entry of every Export menu (export-menu.mjs, openInLayoutEditor( )).
 //
 // What the layout editor reads (its README, "Open ABAP class"): a class by
 // URL - `?src=<raw URL>` from raw.githubusercontent.com or
@@ -24,9 +25,10 @@
 // knowledge (unchangedRawUrl( ) in original.mjs), handed in rather than
 // imported, which would split deep-link.mjs and file-sets.mjs out of the
 // shell into a chunk of their own.
+import { toolUrl } from "./family.mjs";
 import { copyToClipboard, encodeFiles } from "./share.mjs";
 
-export const LAYOUT_EDITOR_URL = "https://abap2ui5.github.io/browser-layout-editor/";
+export const LAYOUT_EDITOR_URL = toolUrl("layout");
 
 /** The layout editor's link for the app class: { url, how: "src" | "paste" }.
  *  `raw` is the class's raw GitHub URL when it is unchanged from there. */
@@ -38,6 +40,28 @@ export async function layoutEditorLink(app, raw) {
   }
   url.hash = `playground=${await encodeFiles([app])}`;
   return { url: url.href, how: "paste" };
+}
+
+/** The Export menu's entry: opens the layout editor on the app class in a new
+ *  tab - the copy started inside the click - and answers what to say.
+ *  @param {{ name: string, source: string }} app
+ *  @param {string | undefined} raw */
+export async function openInLayoutEditor(app, raw) {
+  // The tab first, inside the click: a popup blocker lets a click open one,
+  // not a promise resolved after it.
+  const tab = window.open("about:blank", "_blank");
+  const copied = raw ? Promise.resolve(false) : copyToClipboard(app.source);
+  const link = await layoutEditorLink(app, raw);
+  if (tab) {
+    tab.opener = null;
+    tab.location.href = link.url;
+  } else {
+    window.open(link.url, "_blank", "noopener");
+  }
+  if (link.how === "src") return "opened in the Layout Editor, in a new tab";
+  return (await copied)
+    ? "opened in the Layout Editor, in a new tab - the class is in your clipboard"
+    : "opened in the Layout Editor, in a new tab";
 }
 
 // The section: a sentence, the button, and what happened.

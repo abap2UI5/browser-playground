@@ -44,6 +44,15 @@ export async function encodeFiles(files) {
   return VERSION + toBase64Url(deflated);
 }
 
+// The abap2UI5 VS Code extension's link for one file: its URI handler
+// (VSCODE_URI in family.mjs) takes the source deflated and base64url'd as
+// `code` and the file's name as `name` - the layout editor writes the same
+// link (vscodeLink( ) in its src/handoff.js).
+export async function vscodeUrl(base, { name, source }) {
+  const code = toBase64Url(await through(new CompressionStream("deflate-raw"), new TextEncoder().encode(source)));
+  return `${base}?code=${code}&name=${encodeURIComponent(name)}`;
+}
+
 // What a link may inflate to. Deflate packs a run of one character a
 // thousand to one, so a fragment of a few kilobytes could unpack to
 // gigabytes and take the tab down as it opened - read as a stream and given

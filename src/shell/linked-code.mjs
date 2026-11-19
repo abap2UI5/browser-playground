@@ -43,24 +43,29 @@
 // key there any more; what is left is that the app is what the model reads
 // and acts on - an app written to mislead Claude can steer what it does in
 // that chat (open, run, type into its apps), and the reader should know
-// whose app that is before handing it the controls. On the playground,
+// whose app that is before handing it the controls. The AI App Builder's page
+// asks the same, for the same reason - its model runs the app and reads what
+// it shows (`inspect`) - when the playground or the layout editor hands it a
+// class (Export, Open in: a share fragment, hand-off.mjs). On the playground,
 // a link opens and runs with no question - that is what nine links in ten
 // are for - and the question moves to the one place a secret is typed: once
 // code from a link has run here (markLinkedCodeRan( ), called by run( ) in
 // run.mjs), the Gist section takes no token until the reader has ticked
 // that they know (share-dialog.mjs) - there the frame is this origin, and
 // reaches the token as it is typed. Code the reader wrote, a draft, a sample
-// and the catalogue's classes ask nothing. The AI Studio opens no links at
-// all.
+// and the catalogue's classes ask nothing. The AI Studio opens a share link
+// and nothing else: no ?src=, no gist.
 //
 // None of this is a wall where the frame is this origin - code that runs in
 // it can rewrite the page that warns about it. It is the reader being told,
 // at the moment it matters, that a fresh page without the link is the safe
 // place for a secret.
-export function confirmLinkedCode(what) {
+export function confirmLinkedCode(what, { cancel = "Open the sample instead" } = {}) {
   const dialog = document.getElementById("linked-dialog");
   if (!dialog || typeof dialog.showModal !== "function") return Promise.resolve(false);
   document.getElementById("linked-what").textContent = what;
+  const no = document.getElementById("linked-cancel");
+  if (no) no.textContent = cancel;
   return new Promise((resolve) => {
     dialog.addEventListener("close", () => resolve(dialog.returnValue === "open"), { once: true });
     dialog.returnValue = "";

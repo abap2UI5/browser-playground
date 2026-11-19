@@ -102,7 +102,7 @@ test("an embedded playground follows its reader's system theme, not a choice mad
   // up the draft: a demo has to read the same to every reader.
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/");
-  await page.evaluate(() => localStorage.setItem("abap2ui5-playground:theme", "dark"));
+  await page.evaluate(() => localStorage.setItem("abap2ui5:theme", "dark"));
   await page.goto("/?embed=1");
   expect(await page.evaluate(() => document.documentElement.getAttribute("data-theme"))).toBeNull();
   await expect(page.locator("#status")).toHaveText("running", { timeout: 120000 });

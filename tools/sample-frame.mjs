@@ -54,9 +54,8 @@ export const SOCIALS = `<div class="socials">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/></svg>
       </summary>
       <div class="menu">
-        <button id="theme" class="theme" type="button" role="switch" aria-checked="false" aria-label="Dark theme">
-          <span class="when-light"><span class="glyph" aria-hidden="true">☾</span>Switch to dark</span>
-          <span class="when-dark"><span class="glyph" aria-hidden="true">☀</span>Switch to light</span>
+        <button id="theme" class="theme" type="button" aria-label="Appearance" title="Appearance: as the system - click for light">
+          <span class="glyph" aria-hidden="true">◐</span><span class="theme-word">Appearance: as the system</span>
         </button>
         <a href="https://github.com/abap2UI5/abap2UI5/issues" target="_blank" rel="noopener">Issues</a>
         <a href="https://abap2ui5.github.io/docs/resources/changelog">Release notes</a>

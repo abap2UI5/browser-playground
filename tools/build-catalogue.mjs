@@ -418,7 +418,7 @@ for (const tool of ["build-catalogue.mjs", "sample-pages.mjs", "sample-frame.mjs
                     "abap-highlight.mjs", "html.mjs"]) {
   stamp.update(fs.readFileSync(path.join(ROOT, "tools", tool)));
 }
-for (const shared of ["shell/ui5-libs.mjs", "shell/ui5-libraries.mjs", "shell/theme-boot.mjs", "catalogue/sample.css"]) {
+for (const shared of ["shell/ui5-libs.mjs", "shell/ui5-libraries.mjs", "shell/theme-boot.mjs", "shell/family.mjs", "catalogue/sample.css"]) {
   stamp.update(fs.readFileSync(path.join(ROOT, "src", shared)));
 }
 const hash = stamp.digest("hex");

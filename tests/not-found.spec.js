@@ -101,3 +101,25 @@ test("a three-letter word is not the start of every title that begins with it", 
   await expect(page.locator("h1")).toHaveText("This page is not here");
   await expect(page.locator("#near")).toBeHidden();
 });
+
+// The appearance switch in the bar's menu: the one every abap2UI5 tool
+// carries (family.mjs) - as the system, light, dark - under the shared key,
+// written by the inline menu script (THEME_MENU in src/shell/theme-boot.mjs).
+test("the 404's appearance switch goes system, light, dark and back, under the shared key", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto(nearMiss().missed);
+  const stored = () => page.evaluate(() => localStorage.getItem("abap2ui5:theme"));
+  await page.locator("#extra summary").click();
+  const theme = page.locator("#theme");
+  await expect(theme).toHaveText("◐Appearance: as the system");
+  await theme.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  expect(await stored()).toBe("light");
+  await theme.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(theme).toHaveText("☾Appearance: dark");
+  expect(await stored()).toBe("dark");
+  await theme.click();
+  expect(await page.evaluate(() => document.documentElement.getAttribute("data-theme"))).toBeNull();
+  expect(await stored()).toBeNull();
+});

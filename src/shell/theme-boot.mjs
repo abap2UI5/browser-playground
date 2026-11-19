@@ -21,10 +21,19 @@
 //
 // src/shell/theme.mjs is the playground's own switch - the same key, the same
 // rule, but a module with listeners (the editor and the app frame follow it)
-// and the embed's no-restore rule, which no static page needs. It imports
-// THEME_KEY from here, so the key at least is one constant for all of them.
+// and the embed's no-restore rule, which no static page needs. Both take the
+// key from family.mjs, the file the four abap2UI5 tools share (the layout
+// editor carries it byte for byte): one key on the origin abap2ui5.github.io,
+// so a reader's choice in one tool is the choice in all of them.
+//
+// Three states, the same in every tool: as the system (◐), light (☀), dark
+// (☾). The key holds "light" or "dark"; absent means as the system. A key the
+// setting lived under before (THEME_KEYS_BEFORE) is read once, moved to the
+// key and removed - THEME_MIGRATE, the first lines of THEME_BOOT.
 
-export const THEME_KEY = "abap2ui5-playground:theme";
+import { THEME_KEY, THEME_KEYS_BEFORE, APPEARANCE_GLYPH, APPEARANCE_NAME } from "./family.mjs";
+
+export { THEME_KEY, THEME_KEYS_BEFORE };
 
 /* The stored choice, applied as `data-theme` on <html> before the first paint:
  * a page that painted light and turned dark a second later, once a bundle had
@@ -37,17 +46,26 @@ export const THEME_KEY = "abap2ui5-playground:theme";
 export const THEME_BOOT = `  try {
     if (!/[?&]embed=1(&|$)/.test(location.search)) {
       var t = localStorage.getItem(${JSON.stringify(THEME_KEY)});
+      if (t === null) {
+        var before = ${JSON.stringify(THEME_KEYS_BEFORE)};
+        for (var i = 0; i < before.length; i++) {
+          var old = localStorage.getItem(before[i]);
+          if (old === "dark" || old === "light") { if (t === null) { t = old; localStorage.setItem(${JSON.stringify(THEME_KEY)}, old); } }
+          if (old !== null) localStorage.removeItem(before[i]);
+        }
+      }
       if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
     }
   } catch (e) { /* a browser that refuses storage still gets the system theme */ }`;
 
-/* The bar's menu and the theme switch inside it, wired, for the documents
- * that have no bundle of their own to do it with - every sample page and the
- * 404 - and the catalogue, which has one but has no reason to carry a second
- * copy of the same lines in it. The menu is a <details> and opens on its own;
- * this closes it on a click anywhere else and on Escape. The switch: a choice
- * that equals the system is forgotten rather than stored, so a page switched
- * back follows the system again - the rule theme.mjs keeps for the playground.
+/* The bar's menu and the appearance switch inside it, wired, for the
+ * documents that have no bundle of their own to do it with - every sample page
+ * and the 404 - and the catalogue, which has one but has no reason to carry a
+ * second copy of the same lines in it. The menu is a <details> and opens on
+ * its own; this closes it on a click anywhere else and on Escape. The switch
+ * goes as the system -> light -> dark -> as the system, the order theme.mjs
+ * keeps for the playground and the layout editor for itself; "as the system"
+ * is the key removed.
  *
  * At the end of the body rather than in the head: it needs the bar to exist,
  * and nothing is painted differently by it - the stored theme was applied
@@ -64,35 +82,40 @@ export const THEME_MENU = `  (function () {
     }
     var button = document.getElementById("theme");
     if (!button) return;
-    var media = window.matchMedia("(prefers-color-scheme: dark)");
-    var system = function () { return media.matches ? "dark" : "light"; };
+    var key = ${JSON.stringify(THEME_KEY)};
+    var glyph = ${JSON.stringify(APPEARANCE_GLYPH)};
+    var name = ${JSON.stringify(APPEARANCE_NAME)};
+    var order = ["", "light", "dark"];
+    var current = function () { var t = document.documentElement.dataset.theme; return t === "dark" || t === "light" ? t : ""; };
     var tell = function () {
-      button.setAttribute("aria-checked", String((document.documentElement.dataset.theme || system()) === "dark"));
+      var a = current(), next = order[(order.indexOf(a) + 1) % 3];
+      button.title = "Appearance: " + name[a] + " - click for " + name[next];
+      var g = button.querySelector(".glyph"), w = button.querySelector(".theme-word");
+      if (g) g.textContent = glyph[a];
+      if (w) w.textContent = "Appearance: " + name[a];
     };
     tell();
     button.addEventListener("click", function () {
-      var now = document.documentElement.dataset.theme || system();
-      var next = now === "dark" ? "light" : "dark";
-      document.documentElement.dataset.theme = next;
+      var a = current(), next = order[(order.indexOf(a) + 1) % 3];
+      if (next) document.documentElement.dataset.theme = next;
+      else delete document.documentElement.dataset.theme;
       tell();
       try {
-        if (next === system()) localStorage.removeItem(${JSON.stringify(THEME_KEY)});
-        else localStorage.setItem(${JSON.stringify(THEME_KEY)}, next);
+        if (next) localStorage.setItem(key, next);
+        else localStorage.removeItem(key);
       } catch (e) { /* a browser that refuses storage still gets the switch, just not the memory */ }
     });
     /* Read again when the page comes back from the back/forward cache or
-       another tab flips it - the playground's theme.mjs does the same. */
+       another tab - another abap2UI5 tool on this origin - changes it. */
     var resync = function () {
       var stored = null;
-      try { stored = localStorage.getItem(${JSON.stringify(THEME_KEY)}); } catch (e) { /* blocked storage */ }
+      try { stored = localStorage.getItem(key); } catch (e) { /* blocked storage */ }
       if (stored === "dark" || stored === "light") document.documentElement.dataset.theme = stored;
       else delete document.documentElement.dataset.theme;
       tell();
     };
     addEventListener("pageshow", function (e) { if (e.persisted) resync(); });
-    addEventListener("storage", function (e) { if (e.key === ${JSON.stringify(THEME_KEY)} || e.key === null) resync(); });
-    /* And when the system flips the theme under a page that follows it. */
-    if (media.addEventListener) media.addEventListener("change", tell);
+    addEventListener("storage", function (e) { if (e.key === key || e.key === null) resync(); });
   })();`;
 
 /* Either one as the element a document carries. */

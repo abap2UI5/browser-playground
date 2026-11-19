@@ -199,6 +199,11 @@ function propertySheet(file, source, xml) {
         delete input.dataset.event;
         input.dataset.abap = d.bind.bindingAbap(client, name, how === "edit");
       }
+      // A select (an enum's, a boolean's) gets the ABAP as an option of its
+      // own, chosen - what it offers otherwise are literals.
+      if (input instanceof HTMLSelectElement && ![...input.options].some((o) => o.value === input.dataset.abap)) {
+        input.append(new Option(input.dataset.abap, input.dataset.abap));
+      }
       input.value = input.dataset.abap;
       input.classList.add("is-abap");
       select.value = "";
@@ -215,9 +220,9 @@ function propertySheet(file, source, xml) {
   // (abap2UI5/browser-layout-editor, src/ui/inspector.js) - Content,
   // Appearance, Behaviour, Events, by the property's type at the floor -
   // with the same filter, the same "set only" and the same marks for what a
-  // value is: Aa typed, @ bound to an attribute, ƒx an event or an
-  // expression. A control's tree is the list on the left, so there is no
-  // Children section here. With "set only" off, the properties the control
+  // value is: Aa typed, @ bound to an attribute, # a field of the row, ƒx
+  // a UI5 expression (valueKind( )); enums and booleans in a select; and the
+  // Children section after Events. With "set only" off, the properties the control
   // has and does not set are rows too, empty - "— default —" until a value
   // is typed or picked.
   const sections = new Map(SECTIONS.map((name) => [name, []]));
@@ -234,21 +239,33 @@ function propertySheet(file, source, xml) {
     if (!set) line.classList.add("is-unset");
     const mark = document.createElement("b");
     mark.className = "view-prop-kind";
-    const kind = /^\{.*\}$/.test(value) ? "@" : /^\.eB\(|^\.eF\(/.test(value) ? "ƒx" : "Aa";
+    const kind = valueKind(value);
     mark.textContent = set ? kind : "";
     mark.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.textContent = name;
     label.prepend(mark);
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = value;
-    input.dataset.attr = name;
-    input.spellcheck = false;
-    if (!set) {
-      const dflt = known.get(name)?.default;
-      input.placeholder = dflt !== undefined && dflt !== "" ? `— default (${dflt}) —` : "— default —";
+    // An enum's values or a boolean's (controlInfo( ) at the floor) in a
+    // select, its first option the default - as the layout editor's
+    // inspector offers them; a free value, or one that is ABAP, typed.
+    const prop = known.get(name);
+    const dflt = prop?.default;
+    const defaultText = dflt !== undefined && dflt !== "" ? `— default (${dflt}) —` : "— default —";
+    /** @type {HTMLInputElement | HTMLSelectElement} */
+    let input;
+    if (prop?.values && kind === "Aa" && (value === "" || prop.values.includes(value))) {
+      input = document.createElement("select");
+      input.className = "view-prop-values";
+      input.append(new Option(defaultText, ""), ...prop.values.map((v) => new Option(v, v)));
+      input.value = value;
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+      input.value = value;
+      input.spellcheck = false;
+      if (!set) input.placeholder = defaultText;
     }
+    input.dataset.attr = name;
     // An expression the reconstruction rendered ({NAME}, .eB(...)) is ABAP
     // in the chain - a bind, an event. Changed here it becomes a literal;
     // left alone it stays what it is, which the sheet says.
@@ -294,12 +311,47 @@ function propertySheet(file, source, xml) {
     if (name === "Content") {
       const hint = document.createElement("p");
       hint.className = "view-props-hint";
-      hint.textContent = "Aa a value · @ bound to an attribute · ƒx an event or an expression";
+      hint.textContent = KIND_HINT;
       group.append(hint);
     }
     group.append(...rows);
     form.append(group);
     groups.push(group);
+  }
+  // Children: the aggregations the control has at the floor, each with how
+  // many controls the view puts in it - a click picks the first of them in
+  // the tree. Read-only: what goes in is added with "Add after this" below.
+  const children = childrenOf(picked, info);
+  if (children.length) {
+    const group = document.createElement("fieldset");
+    group.className = "view-props-group view-props-children";
+    const legend = document.createElement("legend");
+    legend.textContent = "Children";
+    group.append(legend);
+    for (const { aggregation, controls } of children) {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "view-child";
+      row.dataset.aggregation = aggregation;
+      row.disabled = controls.length === 0;
+      const name = document.createElement("span");
+      name.textContent = aggregation;
+      const count = document.createElement("span");
+      count.className = "view-child-count";
+      count.textContent = controls.length === 0 ? "empty" : `${controls.length} control${controls.length === 1 ? "" : "s"}`;
+      row.append(name, count);
+      row.title = controls.length ? `Pick ${controls[0].tagName}, the first in ${aggregation}` : `Nothing in ${aggregation}`;
+      row.addEventListener("click", () => {
+        const at = elements.indexOf(controls[0]);
+        if (at === -1) return;
+        sheet.index = at;
+        sheet.element = undefined;
+        d.redraw();
+        document.querySelector('.view-tree button[aria-current="true"]')?.focus();
+      });
+      group.append(row);
+    }
+    form.append(group);
   }
   // The filter hides rows rather than drawing the sheet again: a value half
   // typed into a row stays where it is.
@@ -370,6 +422,13 @@ function propertySheet(file, source, xml) {
       // A row of a property the control does not set: only a value typed
       // or picked sets it.
       if (!picked.hasAttribute(input.dataset.attr) && value === "") continue;
+      // A select set back to "— default —": the property goes, rather than
+      // being written as an empty string the control would refuse.
+      if (input instanceof HTMLSelectElement && value === "") {
+        picked.removeAttribute(input.dataset.attr);
+        changed = true;
+        continue;
+      }
       if (value !== picked.getAttribute(input.dataset.attr)) {
         picked.setAttribute(input.dataset.attr, value);
         changed = true;
@@ -490,6 +549,47 @@ const PALETTE = [
   ["MessageStrip", { text: "Message" }],
   ["ObjectStatus", { text: "Status" }],
 ];
+
+// What a value is, by the mark the layout editor's inspector gives it: Aa
+// typed, @ bound to an attribute of the app (an absolute path - the
+// framework binds to /XX/… and /EDIT/…), # a field of the row (a relative
+// path, inside a list's or a table's template), ƒx a UI5 expression - an
+// expression binding, or an event the chain raises (.eB( ), .eF( )).
+export const KIND_HINT = "Aa a value · @ bound to an attribute · # a field of the row · ƒx a UI5 expression";
+/** @param {string} value */
+export function valueKind(value) {
+  if (/^\.eB\(|^\.eF\(/.test(value) || /^\{\s*:?=/.test(value)) return "ƒx";
+  if (!/^\{[\s\S]*\}$/.test(value)) return "Aa";
+  if (/^\{\s*\//.test(value) || /^\{\s*path\s*:\s*['"]\//.test(value) || /^\{\s*parts\s*:/.test(value)) return "@";
+  return "#";
+}
+
+// The aggregations of `el` with the controls the view puts in each: the
+// lower-case child elements are aggregations by name (<content>, <footer>),
+// the controls straight under the element are its default aggregation's.
+// Every aggregation the control has at the floor is listed, empty or not.
+/** @param {Element} el @param {any} info */
+export function childrenOf(el, info) {
+  const local = (/** @type {Element} */ e) => e.tagName.slice(e.tagName.indexOf(":") + 1);
+  /** @type {Map<string, Element[]>} */
+  const by = new Map((info?.aggregations ?? []).map((/** @type {string} */ a) => [a, []]));
+  const fallback = info?.defaultAggregation ?? "content";
+  // childNodes rather than children: the same in a browser and in the unit
+  // tests' DOM.
+  const elementsIn = (/** @type {Element} */ e) => /** @type {Element[]} */ ([...e.childNodes].filter((n) => n.nodeType === 1));
+  for (const child of elementsIn(el)) {
+    const name = local(child);
+    if (/^[a-z]/.test(name)) {
+      if (!by.has(name)) by.set(name, []);
+      by.get(name)?.push(...elementsIn(child));
+    } else {
+      if (!by.has(fallback)) by.set(fallback, []);
+      by.get(fallback)?.push(child);
+    }
+  }
+  if (!info && by.size === 0) return [];
+  return [...by].map(([aggregation, controls]) => ({ aggregation, controls }));
+}
 
 // The sections of the sheet, in the layout editor's order, and which one a
 // property's UI5 type puts it in (its inspector sorts the same way).

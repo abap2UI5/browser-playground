@@ -714,22 +714,55 @@ test("Properties: sections, filter and set only, as the layout editor's inspecto
   // Set only, at first: text under Content, press under Events, each marked.
   await expect(page.locator("#view-props-only-set")).toBeChecked();
   await expect(page.locator(".view-props-group > legend")).toHaveText(["Content", "Events"]);
+  // A Button holds no controls: no Children.
+  await expect(page.locator(".view-props-children")).toHaveCount(0);
   await expect(page.locator('.view-prop:has(input[data-attr="text"]) .view-prop-kind')).toHaveText("Aa");
   await expect(page.locator('.view-prop:has(input[data-attr="press"]) .view-prop-kind')).toHaveText("ƒx");
 
+  // The four marks, explained where the layout editor explains them.
+  await expect(page.locator(".view-props-hint")).toHaveText("Aa a value · @ bound to an attribute · # a field of the row · ƒx a UI5 expression");
+
   // Everything the control has, in the editor's order of sections.
   await page.locator("#view-props-only-set").uncheck();
-  await expect(page.locator(".view-props-group > legend")).toHaveText(["Content", "Appearance", "Behaviour", "Events"]);
-  await expect(page.locator('.view-prop input[data-attr="enabled"]')).toHaveAttribute("placeholder", "— default (true) —");
+  await expect(page.locator(".view-props-group:not(.view-props-children) > legend")).toHaveText(["Content", "Appearance", "Behaviour", "Events"]);
+  // A boolean is a select, its default first - as the inspector offers it.
+  const enabled = page.locator('.view-prop select[data-attr="enabled"]');
+  await expect(enabled.locator("option")).toHaveText(["— default (true) —", "true", "false"]);
+  // An enum is a select of its values at the floor (controlInfo( ), the
+  // linter's metadata): sap.m.ButtonType's 1.71 values, none from after it.
+  const type = page.locator('.view-prop select[data-attr="type"]');
+  const types = await type.locator("option").allTextContents();
+  expect(types[0]).toMatch(/^— default/);
+  expect(types).toEqual(expect.arrayContaining(["Default", "Emphasized", "Reject", "Transparent"]));
+  expect(types).not.toContain("Critical"); // 1.73
   // The filter hides rows, and sections left empty.
   await page.locator(".view-props-filter").fill("enab");
   await expect(page.locator(".view-prop:not([hidden])")).toHaveCount(2); // enabled, and the new-property row
-  await expect(page.locator(".view-props-group:not([hidden]) > legend")).toHaveText(["Behaviour"]);
-  // A value typed into an unset row is written; the empty ones are not.
-  await page.locator('.view-prop input[data-attr="enabled"]').fill("false");
+  await expect(page.locator(".view-props-group:not([hidden]):not(.view-props-children) > legend")).toHaveText(["Behaviour"]);
+  // A value picked in an unset row is written; the empty ones are not.
+  await enabled.selectOption("false");
   await page.locator("#view-props-apply").click();
   await expect(page.locator("#status")).toContainText("Button: written into the builder chain");
   const abap = await getSource(page, APP);
   expect(abap).toMatch(/n = `enabled`\s+v = `false`/);
   expect(abap).not.toContain("n = `visible`");
+});
+
+// Children, after Events: the aggregations of the picked control, each with
+// how many controls the view puts in it - a click picks the first of them.
+test("Properties: Children lists the aggregations and picks a child", async ({ page }) => {
+  await open(page);
+  await runSample(page, SAMPLE);
+  await page.locator('[data-insight="view"]').click();
+  await expect(page.locator(".view-xml")).toContainText("<Button", { timeout: 30000 });
+  await page.locator("#view-properties").click();
+  await page.locator(".view-tree button").filter({ hasText: /^Page/ }).first().click();
+  const children = page.locator(".view-props-children");
+  await expect(children.locator("legend")).toHaveText("Children", { timeout: 30000 });
+  const content = children.locator('.view-child[data-aggregation="content"]');
+  await expect(content).toBeEnabled();
+  await expect(content.locator(".view-child-count")).toHaveText(/^\d+ controls?$/);
+  await expect(children.locator('.view-child[data-aggregation="footer"]')).toContainText("empty");
+  await content.click();
+  await expect(page.locator(".view-props-title")).not.toHaveText("Page");
 });

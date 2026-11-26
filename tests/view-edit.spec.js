@@ -586,9 +586,10 @@ test("Properties: a property bound to an attribute, an event added with its arm 
   await page.locator(".view-tree button").filter({ hasText: /^Button/ }).first().click();
   await expect(page.locator(".view-props-title")).toHaveText("Button");
 
-  // text: bound to greeting, shown (not editable).
+  // text: bound to greeting - one bind per attribute (the "(editable)" one
+  // wrote _bind_edit( ), gone with abap2UI5 1.151.0).
   const bind = page.locator('.view-prop:has(input[data-attr="text"]) .view-prop-bind');
-  await expect(bind.locator("option")).toContainText(["bind…", "name", "name (editable)", "greeting", "greeting (editable)", "event - the name in the field"]);
+  await expect(bind.locator("option")).toContainText(["bind…", "name", "greeting", "event - the name in the field"]);
   await bind.selectOption("greeting|show");
   await expect(page.locator('.view-prop input[data-attr="text"]')).toHaveValue("client->_bind( greeting )");
 

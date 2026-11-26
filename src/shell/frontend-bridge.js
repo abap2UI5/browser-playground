@@ -27,18 +27,19 @@
 
   // The frontend sends its roundtrips to this frame's own URL - the one
   // request the fetch below takes over - because the component is started
-  // with `checkLocal: true`, the frontend's flag for "the page was served by
-  // the backend", which makes it POST to window.location.href instead of the
-  // manifest's data source. This script used to set that flag, as
-  // `window.z2ui5.checkLocal`. abap2UI5#2777 removed the window.z2ui5 global:
-  // the frontend keeps its state per component now (component.ctx.state), and
-  // Component.init( ) reads checkLocal from its component data and from
-  // nowhere else. So the flag is passed the way the backend's own GET page
-  // passes it, as componentData in the data-settings ComponentSupport creates
-  // the component from - written into the frame's index.html at build time by
-  // patchFrontend( ) in tools/build-ui5.mjs. Nothing here reads the
-  // frontend's state either: what the playground records of a roundtrip is
-  // what passes through the fetch below.
+  // with this page as its `endpoint` (and `ownsPage`: the page is the app's).
+  // That used to be `checkLocal: true`, the frontend's flag for "the page was
+  // served by the backend", and before abap2UI5#2777 a `window.z2ui5` global
+  // this script set. abap2UI5 1.151.0 starts the component only from a host,
+  // which hands it the endpoint as component data (core/Embed.js does for the
+  // embed control), so the data is passed the way ComponentSupport creates
+  // the component from it: in the data-settings of the frame's index.html,
+  // written at build time by patchFrontend( ) in tools/build-ui5.mjs
+  // (COMPONENT_DATA there). The restart in place below creates the component
+  // again with the same literal; the build fails when the two disagree.
+  // Nothing here reads the frontend's state either: what the playground
+  // records of a roundtrip is what passes through the fetch below.
+  var COMPONENT_DATA = {"endpoint":"index.html","ownsPage":true};
 
   var nativeFetch = window.fetch.bind(window);
   var self = new URL(window.location.href);
@@ -506,7 +507,7 @@
             var container = new ComponentContainer({
               id: "container",
               name: "z2ui5",
-              settings: { id: "z2ui5", componentData: { checkLocal: true } },
+              settings: { id: "z2ui5", componentData: COMPONENT_DATA },
               handleValidation: true,
               async: true,
               manifest: true,

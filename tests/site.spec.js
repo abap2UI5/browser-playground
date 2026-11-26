@@ -76,7 +76,8 @@ test("the corpus carries the framework and leaves out its generated frontend", a
 });
 
 // And the same directory stays out of the framework bundle, for the bytes this
-// time: 69 classes holding the frontend's source as string constants, read by
+// time: the classes holding the frontend's source as string constants (69 of
+// them until abap2UI5 put them together into five bundle texts), read by
 // nothing the playground ever runs - see generatedFrontendStubPlugin in
 // tools/esbuild-plugins.mjs. The marker is a method of the frontend's own
 // core/Server.js, which of all the ABAP only those classes carry, as text.
@@ -86,11 +87,12 @@ test("the corpus carries the framework and leaves out its generated frontend", a
 // passed on a bundle carrying the whole frontend. So the marker is first
 // found in the frontend the frame loads: a rename upstream fails here, and
 // says to pick another, rather than turning this into a test of nothing.
+// `_combineSignals` went that way with abap2UI5 1.151.0.
 //
 // Asserted as booleans on purpose: a toContain( ) over a six-megabyte string
 // prints the whole string when it fails.
 test("the framework bundle leaves the generated frontend out as well", async ({ request }) => {
-  const marker = "_combineSignals";
+  const marker = "_csrfTokenRequired";
   const server = await (await request.get("/app/core/Server.js")).text();
   expect(server.includes(marker), `${marker} is not in the frontend's core/Server.js any more - pick another marker`).toBe(true);
   const bundle = await (await request.get("/runtime/framework.mjs")).text();

@@ -125,6 +125,11 @@ test("the runtime worker cannot reach the origin's cache, its databases or a fre
   expect(found.reassigned).toMatch(/^(undefined|threw TypeError)$/);
 });
 
+// The view is an empty mvc:View rather than no text at all: with abap2UI5
+// 1.151.0 (protocol 3, "a display may carry an empty view") an empty view
+// text reaches the frontend as a MAIN display, which it builds into an
+// XMLView UI5 refuses ("Neither view name/content nor an XML node is
+// given") - the app terminates. Until 1.150.0 this test ran on the empty one.
 test("an app's WRITE '@KERNEL' finds no cache, database or worker to reach for", async ({ page }) => {
   await open(page);
   const cls = MAIN_CLASS.toLowerCase();
@@ -139,7 +144,10 @@ ENDCLASS.
 CLASS ${cls} IMPLEMENTATION.
   METHOD z2ui5_if_app~main.
     WRITE '@KERNEL this.probe.set("reached:" + [typeof caches, typeof indexedDB, typeof Worker].join("/"));'.
-    client->view_display( z2ui5_cl_ui5_view_builder=>factory( )->stringify( ) ).
+    client->view_display( z2ui5_cl_ui5_view_builder=>factory(
+        )->ele( n = \`View\` ns = \`mvc\`
+            )->a( n = \`xmlns:mvc\` v = \`sap.ui.core.mvc\`
+        )->stringify( ) ).
     client->message_box_display( probe ).
   ENDMETHOD.
 ENDCLASS.

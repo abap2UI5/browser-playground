@@ -49,7 +49,7 @@ CLASS ${MAIN_CLASS} IMPLEMENTATION.
       DATA(row) = VALUE zproducts( product_id = \`P999\` name = \`Cable\` price = '5.00' stock = 1 ).
       INSERT zproducts FROM @row.
       read( ).
-      client->view_model_update( ).
+      " the model reaches the browser by itself (view_model_update( ) went with abap2UI5 1.151.0)
     ENDIF.
 
   ENDMETHOD.

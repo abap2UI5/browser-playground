@@ -15,6 +15,9 @@
 import { AgentError, createAppClient } from "../vendor/agent/appclient.mjs";
 import { analyzeScreen, applyResponse, emptyState, FRONTEND_EVENTS, getAt, modelKeyOf } from "../vendor/agent/snapshot.mjs";
 import { clip } from "./ai-common.mjs";
+// The vendored fold and client speak protocol 2; the pinned framework may
+// answer in 3 - every answer they see goes through this first (wire.mjs).
+import { asProtocol2, bodyAsProtocol2 } from "./wire.mjs";
 
 const SLOTS = ["MAIN", "NEST", "NEST2", "POPUP", "POPOVER"];
 export const MAX_ROWS = 20;
@@ -117,7 +120,7 @@ export function createMirror({ onChange = () => {} } = {}) {
         return;
       }
       if (!json?.S_FRONT) return;
-      mirror.state = applyResponse(mirror.state, json);
+      mirror.state = applyResponse(mirror.state, asProtocol2(json));
       mirror.error = null;
       mirror.version += 1;
       onChange();
@@ -222,7 +225,7 @@ export function createOperator({ app, mirror, ui = {}, halted = () => false }) {
         return { status: 200, headers: {}, body: JSON.stringify(answer) };
       }
       const response = await host.drive(body);
-      return { status: response.status, headers: {}, body: String(response.body ?? "") };
+      return { status: response.status, headers: {}, body: bodyAsProtocol2(String(response.body ?? "")) };
     },
     location: (app) => ({ origin: window.location.origin, pathname: "/", search: `?app_start=${encodeURIComponent(app)}` }),
     backendHint: "",

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Builds the abap2UI5 UI5 frontend, with the OpenUI5 runtime alongside it.
 //
-// The frontend is taken as-is from abap2UI5/frontend (result/cloud/app/webapp,
-// the tree that repository publishes for installation) and built with the UI5
-// tooling,
-// which fetches the OpenUI5 libraries from npm and writes them next to the app
-// under resources/. The result is a directory that needs nothing but a static
+// The frontend is taken as-is from the framework pin: bundle/webapp, the
+// source of what abap2UI5 serves as ?z2ui5-bundle, served here one file per
+// module as a UI5 application, with the page every abap2UI5 delivery starts
+// on (app_source/webapp/index.html) in front of it - and built with the UI5
+// tooling, which fetches the OpenUI5 libraries from npm and writes them next
+// to the app under resources/. The result is a directory that needs nothing but a static
 // file server.
 //
 // Serving UI5 ourselves rather than linking the CDN is the difference between a
@@ -27,12 +28,32 @@ import { UI5_LIBRARIES, UI5_VERSION } from "../src/shell/ui5-libraries.mjs";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEPS = path.join(ROOT, "deps");
 const BUILD = path.join(ROOT, "build");
-/* It used to be deps/abap2ui5/build/cloud/app/webapp, a tree checked into the
- * framework repository. abap2UI5#2676 removed it: the frontend is built there
- * from app/webapp and published to abap2UI5/frontend, one result/<variant>
- * per delivery branch. `cloud` is the variant this playground serves, and
- * fetch-deps holds its VERSION to the framework pin so the two cannot drift. */
-const APP_SRC = path.join(DEPS, "abap2ui5-frontend", "result", "cloud", "app", "webapp");
+/* Where the frontend comes from, by abap2UI5 release:
+ *   - until abap2UI5#2676, deps/abap2ui5/build/cloud/app/webapp, a tree
+ *     checked into the framework repository;
+ *   - until 1.150.0, abap2UI5/frontend's result/cloud/app/webapp, a second
+ *     pin held to the framework's by its VERSION file;
+ *   - from 1.151.0, the framework clone itself. abap2UI5/frontend is retired,
+ *     and the frontend is no app of its own any more: a backend answers
+ *     GET <node>?z2ui5-bundle with bundle/webapp as one generated script,
+ *     and the page of every delivery (app_source/webapp, the `cloud`
+ *     branch's app/) is a z2ui5.embed.Container that asks for that script.
+ *     A static site cannot answer the query - a <script> of
+ *     app/index.html?z2ui5-bundle gets index.html - so the playground is
+ *     what upstream calls "a host that serves the frontend's files itself"
+ *     (core/CustomControls.js, devtools/DevTools.js): bundle/webapp built as
+ *     an application, every module a file and in the Component-preload, the
+ *     custom controls and the developer tools found by the UI5 loader, and
+ *     the component created straight from the page (withComponentData( )
+ *     below) - which is what core/Embed.js does for the control, minus
+ *     fetching the bundle.
+ * The page is app_source/webapp/index.html, the upstream one, patched by
+ * patchFrontend( ) the way the published index.html was: its bootstrap and
+ * its ComponentSupport <div> name the component z2ui5, which here resolves
+ * to bundle/webapp's Component.js (app_source's own Component.js and view -
+ * the Container - are not taken). fetch-deps checks that both are there. */
+const APP_SRC = path.join(DEPS, "abap2ui5", "bundle", "webapp");
+const PAGE_SRC = path.join(DEPS, "abap2ui5", "app_source", "webapp", "index.html");
 const WORK = path.join(BUILD, "ui5app");
 const UI5_DIST = path.join(BUILD, "ui5dist");
 const OUT = path.join(ROOT, "dist", "app");
@@ -84,6 +105,7 @@ function inputHash() {
     }
   };
   addTree(APP_SRC);
+  h.update("index.html").update(fs.readFileSync(PAGE_SRC));
   h.update(UI5_VERSION).update(UI5_LIBRARIES.join(","));
   // The tooling that builds it: a bump of @ui5/cli has to rebuild rather than
   // reuse build/ui5dist (build-framework.mjs hashes the same for its bundle).
@@ -102,6 +124,7 @@ function build() {
   fs.rmSync(UI5_DIST, { recursive: true, force: true });
   fs.mkdirSync(WORK, { recursive: true });
   fs.cpSync(APP_SRC, path.join(WORK, "webapp"), { recursive: true });
+  fs.copyFileSync(PAGE_SRC, path.join(WORK, "webapp", "index.html"));
 
   // The UI5 tooling walks up looking for the project it should build, and would
   // otherwise find the playground's own package.json and refuse.
@@ -208,35 +231,44 @@ const FRAME_OPTIONS = ['data-sap-ui-frameOptions="trusted"', 'data-sap-ui-frameO
 
 // Where the component is told that the page around it is its backend.
 //
-// The frontend POSTs every roundtrip to the manifest's data source
-// (/sap/bc/http/sap/z2ui5) unless its component data says `checkLocal: true`
-// - "this page was served by the backend, answer to its own URL". That is
-// what the backend's GET page passes (z2ui5_cl_ui5_http_handler=>_http_get),
-// and it is true here in the sense that matters: the answer comes from this
-// origin, through the bridge. Without it every roundtrip goes to a path this
-// site does not have, the bridge lets it through (it only takes a POST to the
-// frame's own URL), and nothing renders.
+// The frontend POSTs every roundtrip to the endpoint its component data names,
+// and to the manifest's data source (/sap/bc/z2ui5) without one. Here the
+// endpoint is this page itself: the bridge (src/shell/frontend-bridge.js)
+// takes exactly the POSTs to the frame's own URL, and the answer comes from
+// this origin through it. Without it every roundtrip goes to a path this site
+// does not have, the bridge lets it through, and nothing renders.
 //
-// It used to be a flag on a `window.z2ui5` global that the bridge set ahead of
-// the bootstrap. abap2UI5#2777 removed the global - the frontend's state is
-// per component now - and Component.init( ) reads the flag from its component
-// data and from nowhere else. The published index.html starts the component
-// through ComponentSupport, whose `data-settings` become the component's
-// settings, so the flag goes there: parsed and extended rather than replaced,
-// so whatever else upstream puts in it stays. Re-running it on a page that
-// already carries the flag writes the same page again.
+// Until 1.150.0 the flag for that was `checkLocal: true` ("this page was
+// served by the backend, answer to its own URL"); before abap2UI5#2777 it was
+// a `window.z2ui5` global. 1.151.0 dropped the component's direct start: the
+// component always runs in a host, which hands it `endpoint` - and `ownsPage`
+// when the page is the app's and nothing else (the hash, the title, the busy
+// indicator are the app's then, as they were on the page of its own until
+// 1.150.0) - the way core/Embed.js does for the embed control. The endpoint is
+// relative on purpose: the frame is always the site's own app/index.html, and
+// the site is served under a subpath too.
+//
+// The published index.html starts the component through ComponentSupport,
+// whose `data-settings` become the component's settings, so the data goes
+// there: parsed and extended rather than replaced, so whatever else upstream
+// puts in it stays. Re-running it on a page that already carries it writes the
+// same page again. The bridge creates the component a second time on a
+// restart in place, with the same data - it carries the same literal, and the
+// build fails when the two disagree.
+export const COMPONENT_DATA = { endpoint: "index.html", ownsPage: true };
 const COMPONENT_SETTINGS = /(<div\b[^>]*\bdata-sap-ui-component\b[^>]*\bdata-settings=')([^']*)(')/;
 
-function withCheckLocal(html) {
+function withComponentData(html) {
   const found = COMPONENT_SETTINGS.exec(html);
   if (!found) {
     throw new Error(
       "build-ui5: the frontend index.html no longer starts the component from data-settings - " +
-        "check how it creates it now, and pass it componentData.checkLocal there",
+        "check how it creates it now, and pass it componentData.endpoint there",
     );
   }
   const settings = JSON.parse(found[2]);
-  settings.componentData = { ...settings.componentData, checkLocal: true };
+  delete settings.componentData?.checkLocal;
+  settings.componentData = { ...settings.componentData, ...COMPONENT_DATA };
   return html.replace(found[0], found[1] + JSON.stringify(settings) + found[3]);
 }
 
@@ -248,16 +280,18 @@ function withCheckLocal(html) {
 function patchFrontend() {
   const indexPath = path.join(UI5_DIST, "index.html");
   let html = fs.readFileSync(indexPath, "utf8");
-  const tag = `    <script src="frontend-bridge.js"></script>\n`;
-  const anchor = "    <script\n        id=\"sap-ui-bootstrap\"";
-  if (!html.includes(anchor)) {
+  const bridge = `<script src="frontend-bridge.js"></script>`;
+  // The bootstrap tag as upstream indents it, whichever way that is
+  // (app_source/webapp is Prettier's, the published page of 1.150.0 was not).
+  const anchor = /^([ \t]*)<script\s+id="sap-ui-bootstrap"/m.exec(html);
+  if (!anchor) {
     throw new Error("build-ui5: could not find the UI5 bootstrap tag in the frontend index.html");
   }
   // The UI5 tree survives an incremental build, so this runs against a page
   // that may already carry the tag. Injecting again would load the bridge
   // twice, and the second load would wrap the fetch the first one installed.
-  if (!html.includes(tag)) {
-    html = html.replace(anchor, tag + anchor);
+  if (!html.includes(bridge)) {
+    html = html.slice(0, anchor.index) + anchor[1] + bridge + "\n" + html.slice(anchor.index);
   }
   if (!html.includes(FRAME_OPTIONS[1]) && !html.includes(FRAME_OPTIONS[0])) {
     throw new Error("build-ui5: the frontend index.html no longer sets frameOptions - check what it does now");
@@ -271,9 +305,16 @@ function patchFrontend() {
   // worker (src/shell/warm-up.mjs, English) never held. English, as the page
   // around the frame is (<html lang="en">).
   if (!html.includes("data-sap-ui-language=")) {
-    html = html.replace('data-sap-ui-theme=', 'data-sap-ui-language="en"\n        data-sap-ui-theme=');
+    html = html.replace(/^([ \t]*)data-sap-ui-theme=/m, '$1data-sap-ui-language="en"\n$1data-sap-ui-theme=');
   }
-  html = withCheckLocal(html);
+  html = withComponentData(html);
+  const bridgeSource = fs.readFileSync(path.join(ROOT, "src", "shell", "frontend-bridge.js"), "utf8");
+  if (!bridgeSource.includes(JSON.stringify(COMPONENT_DATA))) {
+    throw new Error(
+      `build-ui5: src/shell/frontend-bridge.js does not restart the component with ${JSON.stringify(COMPONENT_DATA)} - ` +
+        "the restart in place would start it against another backend than the page does",
+    );
+  }
   fs.writeFileSync(indexPath, html);
   fs.copyFileSync(path.join(ROOT, "src", "shell", "frontend-bridge.js"), path.join(UI5_DIST, "frontend-bridge.js"));
 }

@@ -40,9 +40,9 @@ them rather than both. Their output is streamed with the step's name in front
 of each line. Each step is still its own script and still runnable by name
 (`npm run build:framework`):
 
-1. **`tools/fetch-deps.mjs`** pins `abap2UI5/abap2UI5`, its published
-   frontend, `open-abap-core` and `abap2UI5/samples` by commit SHA under
-   `deps/`. Bumping a pin is editing the sha there — nothing else fetches
+1. **`tools/fetch-deps.mjs`** pins `abap2UI5/abap2UI5` (its frontend
+   included - see "Where the frontend comes from" below), `open-abap-core`
+   and `abap2UI5/samples` by commit SHA under `deps/`. Bumping a pin is editing the sha there — nothing else fetches
    source. The samples pin is the one that decides which code the page opens
    on, so a bump of it is a change to the site, not only to the toolchain.
 2. **`tools/build-framework.mjs`** copies the framework plus `src/abap` to
@@ -70,7 +70,8 @@ of each line. Each step is still its own script and still runnable by name
    a tool that never ran was once stamped as a finished downport and the next
    build died in the transpiler on the first `REF #`. A missing binary now
    stops the step with its name.
-3. **`tools/build-ui5.mjs`** builds the abap2UI5 UI5 frontend against a pinned
+3. **`tools/build-ui5.mjs`** builds the abap2UI5 UI5 frontend (the framework
+   pin's `bundle/webapp`, behind the page `app_source/webapp/index.html`) against a pinned
    OpenUI5 (`UI5_VERSION` in `src/shell/ui5-libraries.mjs` — the page reads it
    too, for the warm-up's stylesheet URLs; from npm — no CDN) into `dist/app/`. The copy into
    `dist/app` is its own stamp (`app.stamp`, over the build's input hash and the
@@ -79,12 +80,15 @@ of each line. Each step is still its own script and still runnable by name
    had just reported the tree up to date. It rewrites
    `frameOptions="trusted"` to `"allow"` so the app renders inside somebody
    else's documentation page, and fails if the attribute is no longer there to
-   rewrite. It also hands the component `componentData: { checkLocal: true }`,
-   added to the `data-settings` ComponentSupport creates it from — what the
-   backend's own GET page passes, and what makes the frontend POST to the
-   frame's own URL rather than to the manifest's `/sap/bc/http/sap/z2ui5` —
-   and fails the same way if the page stops creating the component from
-   there. `UI5_LIBRARIES` (`src/shell/ui5-libraries.mjs` — shared with the
+   rewrite. It also hands the component `componentData: { endpoint:
+   "index.html", ownsPage: true }`, added to the `data-settings`
+   ComponentSupport creates it from — what `core/Embed.js` hands the
+   component in every abap2UI5 host (until 1.150.0 it was `checkLocal:
+   true`), and what makes the frontend POST to the frame's own URL rather
+   than to the manifest's `/sap/bc/z2ui5` — and fails the same way if the
+   page stops creating the component from there, or if
+   `frontend-bridge.js`, which creates it again on a restart in place, no
+   longer carries the same literal. `UI5_LIBRARIES` (`src/shell/ui5-libraries.mjs` — shared with the
    examples browser, which filters catalogue entries by it) is the closed set
    of libraries the site carries.
 4. **`tools/build-catalogue.mjs`** fetches the six committed catalogues of the
@@ -173,6 +177,58 @@ of each line. Each step is still its own script and still runnable by name
    browser can link a row to the ABAP, and `src/editor/samples.mjs` is their
    only importer; `src/editor/sample-list.mjs` is the half of the catalogue
    Node can read, which is what the tests import.
+
+## Where the frontend comes from
+
+Until abap2UI5 1.150.0 the frontend was a pin of its own: abap2UI5/frontend's
+`result/cloud/app/webapp`, a mirror of the framework's webapp with a
+`VERSION` file naming the framework commit it was mirrored from, which
+`fetch-deps.mjs` held to the framework pin (`checkFrontendProvenance( )`).
+With 1.151.0 that repository is retired and gets no deploy, and the frontend
+is no app of its own any more: `bundle/webapp` in the framework repository
+is the source of one generated script the backend answers
+`GET <node>?z2ui5-bundle` with (plus `=cc` for the custom controls and
+`=devtools` for the developer tools), and the page of every delivery -
+`app_source/webapp`, the BSP, the `cloud` branch's `app/` - is a
+`z2ui5.embed.Container` (abap2UI5-addons/embed-ui5-control) that asks its
+backend for that script with a `<script src>`.
+
+Three sources were possible, and the playground takes the one that needs no
+second pin:
+
+- **The `cloud` branch's `app/webapp`** is that page and nothing else. It
+  would need the embed control from npm and, worse, a backend that answers
+  `?z2ui5-bundle`: a static site serves `app/index.html` for
+  `app/index.html?z2ui5-bundle`, and the frame's bridge sees only `fetch`,
+  not a `<script>` element's GET. Faking the three answers would mean
+  generating them (the generator, `tools/app2abap/trans2abap.js`, needs the
+  framework's own Node dependencies) or cutting them out of the generated
+  ABAP of `src/01/03` - a copy of a delivery artefact, against the rule that
+  the frontend is a stub here.
+- **The generated classes** - the same objection; and running the http
+  handler's GET branch in the worker would carry the frontend twice.
+- **`bundle/webapp` from the framework clone** is the frontend's source, at
+  exactly the commit the backend is transpiled from, so the two halves
+  cannot drift and the provenance check has nothing left to check (it is now
+  a check that the two paths are there). Upstream supports it by name: "a
+  host that serves the frontend's files itself" (`core/CustomControls.js`,
+  `devtools/DevTools.js`) gets the custom controls and the developer tools
+  through the UI5 loader, one file per module, with no bundle requests at
+  all. `ui5 build` makes it an application as it made the published webapp
+  one (every module also in `Component-preload.js`), and the component is
+  created straight from the page with the component data `core/Embed.js`
+  would have handed it - the playground is the host, without the control,
+  whose only other job is to fetch the bundle.
+
+The page is upstream's own `app_source/webapp/index.html`: its bootstrap
+and its ComponentSupport `<div>` name the component `z2ui5`, which here is
+`bundle/webapp`'s `Component.js` (app_source's own component and view are
+not taken). The frontend's wire moved to protocol 3 in the same release
+(`VIEWS`, `NAV`, `ACTIONS` in place of `S_ACTION.T_SYSTEM`/`T_CUSTOM`); the
+frame does not care - frontend and backend come from the one pin - but the
+playground's own readers of an answer do, and read it through
+`src/shell/wire.mjs` (the Roundtrips summary, and the vendored agent client,
+which speaks protocol 2 until abap2UI5/mcp-server moves).
 
 ## Debug builds
 

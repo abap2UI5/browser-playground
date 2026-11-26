@@ -172,8 +172,9 @@ The rest of the concept's loop, on the same sheet:
   page, stops picking.
 - **Bind instead of type** (step 3, `bind-options.mjs`): next to each
   property, the app's public attributes (`publicAttributes( )`, read off the
-  class definition; references left out) as `_bind` or `_bind_edit`, the
-  editable one first for value-like properties, in the shape the chain
+  class definition; references left out) as one `_bind` each - a binding
+  writes back what is typed, and the `_bind_edit` the sheet offered beside
+  it until abap2UI5 1.150.0 is gone from the client - in the shape the chain
   already calls the client by (`clientOf( )`). The value goes to
   `sourceWithView( )` marked as ABAP (`ABAP_VALUE`, a private-use character,
   view-edit.mjs) and is written as the expression, where any other changed

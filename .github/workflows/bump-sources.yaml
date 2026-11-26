@@ -2,9 +2,9 @@
 # still done entirely by hand: upstream.yml warns weekly when a build against
 # upstream HEAD breaks, but nothing ever MOVED the pins - the same gap
 # bump-linter.yaml closed for the npm side. This closes it for the sources:
-# --update-pins derives the one consistent runtime set (the frontend leads,
-# its result/cloud/VERSION names the framework commit, the framework's own
-# node/setup pin names open-abap-core) and moves the samples pin to its own
+# --update-pins derives the one consistent runtime set (the framework's main
+# HEAD, which carries its frontend since 1.151.0, and the open-abap-core commit
+# its own node/setup pin names) and moves the samples pin to its own
 # HEAD beside them, the full build and the browser tests gate it, and a PR
 # carries it. The deps cache in the build action is keyed on
 # tools/fetch-deps.mjs, so a moved pin forces the fresh clone by itself.
@@ -76,9 +76,9 @@ jobs:
         commit-message: 'chore: bump the pinned framework sources'
         body: |
           Weekly move of the git-source pins in `tools/fetch-deps.mjs`. The
-          three runtime pins move together to the current consistent set - the
-          frontend's main HEAD, the framework commit its `result/cloud/VERSION`
-          names, and the open-abap-core commit that framework pins itself - and
+          runtime pins move together to the current consistent set - the
+          framework's main HEAD (its frontend is in the same tree) and the
+          open-abap-core commit that framework pins itself - and
           abap2UI5/samples, which the page carries a handful of, follows its own
           HEAD. The full build and the browser tests ran green in the workflow
           that opened this PR.

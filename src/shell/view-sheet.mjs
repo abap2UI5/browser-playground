@@ -166,16 +166,14 @@ function propertySheet(file, source, xml) {
     select.className = "view-prop-bind";
     select.setAttribute("aria-label", `Bind ${property || "the new property"} to an attribute`);
     select.append(new Option("bind…", ""));
-    // For a property the user types into (value, selected) the editable bind
-    // comes first - what they type has to reach the attribute.
-    const editFirst = d.bind.editableByDefault(property);
     // Only the attributes whose type fits the property's (d.bind.bindsTo( )): a
     // boolean property is offered abap_bool, a number a number, never a table.
     const type = info?.properties.find((p) => p.name === property)?.type;
     for (const a of attributes.filter((attr) => d.bind.bindsTo(type, attr))) {
-      const show = new Option(a.name, `${a.name}|show`);
-      const edit = new Option(`${a.name} (editable)`, `${a.name}|edit`);
-      select.append(...(editFirst ? [edit, show] : [show, edit]));
+      // One bind per attribute: a binding writes back what the user types
+      // (an "(editable)" second option wrote _bind_edit( ), which abap2UI5
+      // 1.151.0 removed - see bindingAbap( ) in bind-options.mjs).
+      select.append(new Option(a.name, `${a.name}|show`));
     }
     // An event: the name typed into the field, raised by this property, and
     // an empty arm for it in main( ) (d.bind.withEventArm( ) in bind-options.mjs).
@@ -197,7 +195,7 @@ function propertySheet(file, source, xml) {
         input.dataset.abap = d.bind.eventAbap(client, event);
       } else {
         delete input.dataset.event;
-        input.dataset.abap = d.bind.bindingAbap(client, name, how === "edit");
+        input.dataset.abap = d.bind.bindingAbap(client, name);
       }
       // A select (an enum's, a boolean's) gets the ABAP as an option of its
       // own, chosen - what it offers otherwise are literals.

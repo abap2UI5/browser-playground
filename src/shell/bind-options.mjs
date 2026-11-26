@@ -45,7 +45,7 @@ export function publicAttributes(source) {
 
 /**
  * What the chain calls the client by - `client`, `me->client`, `mo_client` -
- * read off a `->_bind`, `->_event` or `->_bind_edit` that is already there;
+ * read off a `->_bind`, `->_event` or (an older class's) `->_bind_edit` that is already there;
  * `client` when there is none.
  * @param {string} source
  */
@@ -54,19 +54,14 @@ export function clientOf(source) {
 }
 
 /**
- * The ABAP that binds `attribute`: one-way for showing it, `_bind_edit` for
- * a property the user types into (an Input's value, a CheckBox's selected).
+ * The ABAP that binds `attribute`. One call whatever the property: a binding
+ * writes back what the user types, and `_bind_edit( )`, the alias the sheet
+ * offered for that until abap2UI5 1.150.0, is gone from z2ui5_if_client
+ * with 1.151.0 - a class it wrote no longer compiles.
  * @param {string} client
  * @param {string} attribute
- * @param {boolean} editable
  */
-export const bindingAbap = (client, attribute, editable) => `${client}->${editable ? "_bind_edit" : "_bind"}( ${attribute} )`;
-
-// The properties a user changes by typing or ticking: bound with _bind_edit
-// by default, so what they type reaches the attribute.
-const EDITED = new Set(["value", "selected", "selectedKey", "dateValue", "state", "pressed", "checked"]);
-/** Whether a binding of `property` is one the user writes back through. */
-export const editableByDefault = (property) => EDITED.has(property);
+export const bindingAbap = (client, attribute) => `${client}->_bind( ${attribute} )`;
 
 // An event's name as the sheet takes it: what check_on_event( ) compares
 // against, upper case by the framework's own habit.

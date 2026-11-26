@@ -9,12 +9,11 @@
 //   node tools/fetch-deps.mjs --update-pins   rewrite the shas below to the
 //                                             current consistent set
 //
-// Bumping a pin is an ordinary reviewed commit: --update-pins moves the three
-// runtime shas TOGETHER along the documented invariant (the frontend leads, its
-// result/cloud/VERSION names the framework commit, the framework's own
-// node/setup pin names open-abap-core), then the build and the tests decide.
-// bump-sources.yaml runs exactly that weekly and opens a PR; by hand it is
-// the same three steps.
+// Bumping a pin is an ordinary reviewed commit: --update-pins moves the two
+// runtime shas TOGETHER along the documented invariant (the framework leads -
+// its main HEAD, frontend included - and its own node/setup pin names
+// open-abap-core), then the build and the tests decide. bump-sources.yaml
+// runs exactly that weekly and opens a PR; by hand it is the same two steps.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
@@ -25,28 +24,24 @@ const DEPS_DIR = path.join(ROOT, "deps");
 
 export const PINS = [
   {
+    /* The framework AND its UI5 frontend - one pin for both since abap2UI5
+     * 1.151.0. The frontend's source is in this same tree: bundle/webapp
+     * (what the backend serves as ?z2ui5-bundle) and app_source/webapp (the
+     * page every delivery starts with, whose index.html tools/build-ui5.mjs
+     * takes). Until 1.150.0 it came from a second pin, abap2UI5/frontend's
+     * result/cloud/app/webapp, held to this one by its VERSION file; that
+     * repository is retired and gets no deploy from 1.151.0 on, and the
+     * `cloud` branch's app/ is only the minimal page that asks a backend for
+     * the bundle - which a static site cannot answer. Taken from the clone
+     * the framework is transpiled from, frontend and backend cannot drift.
+     *
+     * 9962d8a9 is abap2UI5 main carrying release 1.151.0. Move it to the
+     * commit of the tag 1.151.0 once that is cut (it is to be put on exactly
+     * this commit, so the move changes nothing but the sha's provenance). */
     name: "abap2ui5",
     url: "https://github.com/abap2UI5/abap2UI5",
-    sha: "af05dce4f614a1ce5009b8765952fdcee86e666d",
-    note: "the framework itself - src/ is downported and transpiled",
-  },
-  {
-    /* The UI5 frontend, which used to come out of the same clone as
-     * `build/cloud/app/webapp`. abap2UI5#2676 removed that checked-in tree:
-     * the frontend is BUILT there from app/webapp and PUBLISHED here, one
-     * result/<variant> tree per delivery branch. `cloud` is the variant this
-     * playground serves.
-     *
-     * Two pins for one upstream is a cost, and the pair is held together
-     * rather than trusted: result/cloud/VERSION names the abap2UI5 commit its
-     * webapp was mirrored from, and checkFrontendProvenance( ) below fails the
-     * fetch when that is not the framework pin above. Without it the two could
-     * drift a release apart and the only symptom would be a playground whose
-     * frontend and backend disagree at runtime. */
-    name: "abap2ui5-frontend",
-    url: "https://github.com/abap2UI5/frontend",
-    sha: "75ed26d59d4288b790efcbc63cc354e7e6cec1c3",
-    note: "the published UI5 frontend - result/cloud/app/webapp, mirrored from the framework pin above",
+    sha: "9962d8a93bb095f370398252c20161e30739f1f3",
+    note: "the framework itself - src/ is downported and transpiled; bundle/webapp and app_source/webapp are the frontend",
   },
   {
     /* The samples the playground opens on and carries offline. They are not
@@ -62,7 +57,7 @@ export const PINS = [
      * at, not the deploy that happens to run next. */
     name: "abap2ui5-samples",
     url: "https://github.com/abap2UI5/samples",
-    sha: "7a51084729b88d4bef8bbc697a7b36ad4ab04c22",
+    sha: "5ff077198215c49f98a47d3946fe7ef205fa77bf",
     note: "the samples the page opens on and lists as built in",
   },
   {
@@ -70,7 +65,7 @@ export const PINS = [
     url: "https://github.com/open-abap/open-abap-core",
     // The commit abap2UI5 itself pins, so the playground transpiles the
     // framework against the same standard library its CI tests against.
-    sha: "f735eed652288c8ed85b3083a187cc3e7e4a9b97",
+    sha: "1e83502ca98ad2c4f58ec3851edf75e4d80a50f7",
     note: "ABAP standard library for abaplint and the transpiler",
   },
 ];
@@ -87,15 +82,13 @@ if (process.argv.includes("--print-latest")) {
   process.exit(0);
 }
 
-/* --update-pins: move the three shas together, along the invariant
- * checkFrontendProvenance( ) enforces after the fact - so the proposed set is
+/* --update-pins: move the runtime shas together, so the proposed set is
  * consistent BY CONSTRUCTION instead of by luck:
  *
- *   1. the frontend pin becomes the frontend's main HEAD;
- *   2. the framework pin becomes whatever THAT commit's result/cloud/VERSION
- *      says its webapp was mirrored from (never the framework's own HEAD -
- *      main may already be ahead of the last frontend delivery);
- *   3. the open-abap-core pin becomes what THAT framework commit pins in its
+ *   1. the framework pin becomes abap2UI5's main HEAD - the frontend comes
+ *      out of the same tree (bundle/webapp, app_source/webapp), so there is
+ *      no second commit to agree with any more;
+ *   2. the open-abap-core pin becomes what THAT framework commit pins in its
  *      own node/setup/fetch-deps.mjs, so the playground keeps transpiling
  *      against the same standard library upstream's CI tests against.
  *
@@ -111,27 +104,20 @@ if (process.argv.includes("--update-pins")) {
     if (!res.ok) throw new Error(`${repo}@${sha.slice(0, 12)}/${file}: HTTP ${res.status}`);
     return res.text();
   };
-  const frontendHead = git(["ls-remote", "https://github.com/abap2UI5/frontend", "HEAD"]).split("\t")[0];
-  const version = await raw("abap2UI5/frontend", frontendHead, "result/cloud/VERSION");
-  const framework = version.match(/abap2UI5\/abap2UI5@([0-9a-f]{40})/)?.[1];
-  if (!framework) {
-    console.error("update-pins: result/cloud/VERSION carries no `abap2UI5/abap2UI5@<sha>` line - the provenance format changed.");
-    process.exit(1);
-  }
+  const framework = git(["ls-remote", "https://github.com/abap2UI5/abap2UI5", "HEAD"]).split("\t")[0];
   const upstreamPins = await raw("abap2UI5/abap2UI5", framework, "node/setup/fetch-deps.mjs");
   const openAbap = upstreamPins.match(/open-abap-core[\s\S]{0,200}?sha:\s*"([0-9a-f]{40})"/)?.[1];
   if (!openAbap) {
     console.error("update-pins: could not read the open-abap-core sha from the framework's node/setup/fetch-deps.mjs - its pin shape changed.");
     process.exit(1);
   }
-  /* The samples pin is not part of the three-way invariant above - it is a
+  /* The samples pin is not part of the invariant above - it is a
    * catalogue of apps, not a half of the runtime - so it simply follows its
    * own HEAD. It is here rather than in a second command because a bump is a
    * bump: one PR, one review, one build that either stays green or does not. */
   const samplesHead = git(["ls-remote", "https://github.com/abap2UI5/samples", "HEAD"]).split("\t")[0];
   const next = {
     "abap2ui5": framework,
-    "abap2ui5-frontend": frontendHead,
     "abap2ui5-samples": samplesHead,
     "open-abap-core": openAbap,
   };
@@ -201,45 +187,24 @@ if (failures) {
   process.exit(1);
 }
 
-/* The frontend is a MIRROR of the framework's app/webapp, published by
- * abap2UI5's frontend_deploy. Two pins can drift, and the drift is invisible:
- * both trees fetch, both build, and the playground only disagrees with itself
- * at runtime - a frontend calling a backend that answers a different protocol.
- *
- * result/<variant>/VERSION records which abap2UI5 commit the webapp was
- * mirrored from, so the pair is checkable rather than a convention. A bump is
- * therefore two lines that have to move together, and this says so when they
- * do not.
- *
- * Deliberately a hard failure and not a warning: a warning here is read once
- * and then not, and the thing it guards against does not announce itself. */
-function checkFrontendProvenance() {
-  const file = path.join(DEPS_DIR, "abap2ui5-frontend", "result", "cloud", "VERSION");
-  const framework = PINS.find((p) => p.name === "abap2ui5");
-  if (useLatest) return;
-  // A missing VERSION is the check silently switching itself off - the
-  // drift it guards against would then go unnoticed for good.
-  if (!fs.existsSync(file)) {
-    console.error("fetch-deps: result/cloud/VERSION is missing from the frontend pin - the provenance check cannot run;");
-    console.error("  update checkFrontendProvenance in this file to wherever the frontend records it now.");
+/* The frontend comes out of the framework clone (see its pin above), and
+ * tools/build-ui5.mjs reads two places of it: bundle/webapp, the frontend,
+ * and app_source/webapp/index.html, the page it starts on. Both are checked
+ * here, where a pin moves, rather than half way through the UI5 build: a
+ * framework commit that moved them again is a sentence naming the paths,
+ * not a ui5 build of an empty folder. A hard failure, as the provenance
+ * check of the second pin it replaces was - a warning is read once. */
+function checkFrontendSources() {
+  const clone = path.join(DEPS_DIR, "abap2ui5");
+  const missing = ["bundle/webapp/Component.js", "bundle/webapp/manifest.json", "app_source/webapp/index.html"].filter(
+    (rel) => !fs.existsSync(path.join(clone, rel)),
+  );
+  if (missing.length) {
+    console.error(`fetch-deps: the framework pin carries no ${missing.join(", ")} -`);
+    console.error("  the frontend moved inside abap2UI5; update APP_SRC/PAGE_SRC in tools/build-ui5.mjs and this check.");
     process.exit(1);
   }
-  const text = fs.readFileSync(file, "utf8");
-  const m = text.match(/abap2UI5\/abap2UI5@([0-9a-f]{40})/);
-  if (!m) {
-    console.error("fetch-deps: result/cloud/VERSION carries no `abap2UI5/abap2UI5@<sha>` line -");
-    console.error("  the provenance format changed; update checkFrontendProvenance in this file.");
-    process.exit(1);
-  }
-  if (m[1] !== framework.sha) {
-    console.error("fetch-deps: the two abap2UI5 pins disagree.");
-    console.error(`  framework pin          ${framework.sha}`);
-    console.error(`  frontend was built from ${m[1]}`);
-    console.error("  Both move together: pick a frontend commit whose result/cloud/VERSION");
-    console.error("  names the framework commit you want, or the reverse.");
-    process.exit(1);
-  }
-  console.log(`fetch-deps: frontend mirrors the pinned framework (${m[1].slice(0, 12)})`);
+  console.log("fetch-deps: the framework pin carries its frontend (bundle/webapp, app_source/webapp)");
 }
-checkFrontendProvenance();
+checkFrontendSources();
 console.log(useLatest ? "fetch-deps: all dependencies at upstream HEAD" : "fetch-deps: all dependencies at pinned SHAs");

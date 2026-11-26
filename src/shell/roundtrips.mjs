@@ -14,6 +14,8 @@
 // fresh database and a fresh frame, and the roundtrips of the last one would
 // describe an app that is gone), and bounded, because an app with a timer
 // can produce one every second for as long as the tab is open.
+import { asProtocol2 } from "./wire.mjs";
+
 const LIMIT = 200;
 // And bounded by size, not only by count: each entry keeps both bodies parsed,
 // and two hundred answers of an app with a 500-row table held 12 MB in
@@ -65,7 +67,9 @@ export function recordRoundtrip({ request, response, ms }) {
     // The app's attributes as this roundtrip left them (src/runtime/
     // app-state.mjs), for the State tab; undefined when it never got that far.
     state: response.state && typeof response.state === "object" ? response.state : undefined,
-    ...summarise(req, res, response.status),
+    // The summary reads the answer in protocol 2's shape (wire.mjs); the
+    // detail shows it as it went over the wire.
+    ...summarise(req, asProtocol2(res), response.status),
   };
   entry.size = (typeof request === "string" ? request.length : 0)
     + (typeof response.body === "string" ? response.body.length : 0)

@@ -81,6 +81,7 @@ read them before touching `tools/` or `src/runtime/`.
 | `frontend-bridge.js` | Injected into the app frame, talks to the page by `postMessage` only: the fetch interception, restart in place, the AI calls, storage shims for an opaque frame |
 | `sw.js` | The service worker (build id, hashes and chunks substituted by the build; `verifiedHit()`) |
 | `roundtrips.mjs` | The recorded roundtrips (bounded at 200, cleared per Run) |
+| `wire.mjs` | `asProtocol2()`: a protocol-3 answer (abap2UI5 1.151.0: `VIEWS`, `NAV`, `ACTIONS`) in the protocol-2 shape the Roundtrips summary and the vendored agent client read |
 | `insight.mjs` | The bottom panel: strip, folding, drag, redraw, empty-tab shrink |
 | `insight-common.mjs` | What a tab may ask of the panel (`empty()`, `blockHead()`, …) |
 | `insight-<tab>.mjs` | One module per tab: `problems` (+ Fix them bar, `fixableSaid()`), `outline`, `view` (`viewTab()`; the Properties sheet is `view-sheet.mjs`), `tests` (`testsTab()`), `roundtrips` (`roundtripsTab()`), `state` (app attributes per roundtrip), `console` (WRITE output, `#console-count`), `log` (and its one action, e.g. the rename offer), `config` (one tab, a switch between the two checkers); the Debugger tab is drawn by the `debugger.mjs` chunk |
@@ -157,9 +158,9 @@ read them before touching `tools/` or `src/runtime/`.
 | `src/embed/` | `abap2ui5-embed.js` (the loader), `index.html` ("Eight shapes"), `host.html` (smallest embedding) |
 | `src/fonts/` | Inter, self-hosted (`NOTICE.md`) |
 | `tools/build.mjs` | `npm run build`: the five steps, 2 and 3 together |
-| `tools/fetch-deps.mjs` | The pins (framework, frontend, open-abap-core, samples); `--update-pins`, `--print-latest` |
+| `tools/fetch-deps.mjs` | The pins (framework - its frontend included -, open-abap-core, samples); `--update-pins`, `--print-latest` |
 | `tools/build-framework.mjs` | Downport, transpile, bundle → `dist/runtime/framework.mjs` |
-| `tools/build-ui5.mjs` | The UI5 frontend → `dist/app/`; `frameOptions` and `checkLocal` patches |
+| `tools/build-ui5.mjs` | The UI5 frontend (the framework pin's `bundle/webapp`, the page `app_source/webapp/index.html`) → `dist/app/`; `frameOptions` and component-data (`endpoint`, `ownsPage`) patches |
 | `tools/build-catalogue.mjs` | `dist/samples/apps.json`, and the redirects through `sample-pages.mjs` |
 | `tools/sample-pages.mjs` | A forward per sample to the samples site, `samples/`, `samples/all/`, the 404, sitemap, `llms.txt` |
 | `tools/sample-frame.mjs` | The frame those pages share (bar, footer, `THEME_SCRIPT`, `MENU_SCRIPT`) |
@@ -244,9 +245,9 @@ adding the comment and passing.
 The linter is bumped weekly by `bump-linter.yaml`, not Dependabot (a 0.x
 minor is a "major" there, and the pin once sat four minors behind); the build
 refuses a linter whose UI5 metadata disagrees with `UI5_VERSION`. The
-git-source pins move through `bump-sources.yaml` (the frontend leads, its
-`result/cloud/VERSION` names the framework commit, the framework names
-open-abap-core; samples to their own HEAD), so a sample renamed upstream is a
+git-source pins move through `bump-sources.yaml` (the framework to its main
+HEAD - the frontend is in the same tree since 1.151.0, abap2UI5/frontend is
+retired -, the framework names open-abap-core; samples to their own HEAD), so a sample renamed upstream is a
 red bump PR, not a page that opens on nothing. By hand: edit the sha in
 `tools/fetch-deps.mjs`. The samples pin decides what the page opens on — a
 bump of it is a change to the site.
@@ -263,7 +264,7 @@ Each bullet names the design doc that explains it. Keep them true.
 - Generated markers (`modulepreload`, `__EDITOR_PRELOADS__`, `__EDITOR_CSS__`, `__THEME_BOOT__`, `__THEME_MENU__`, the precache list) are written by the build, never by hand.
 
 **Runtime** ([runtime.md](docs/design/runtime.md))
-- The frame POSTs to its own URL because the component gets `checkLocal: true` in its component data; `window.z2ui5` no longer exists. The bridge intercepts by origin and pathname only.
+- The frame POSTs to its own URL because the component gets `endpoint: "index.html"` (and `ownsPage: true`) in its component data - `checkLocal` went with abap2UI5 1.151.0, `window.z2ui5` before it; the bridge's restart in place uses the same literal (`COMPONENT_DATA`, the build compares). The bridge intercepts by origin and pathname only.
 - Frame and page exchange messages only (`frame-link.mjs` ↔ `frontend-bridge.js`), never reach into each other's window or document; nothing secret goes to a frame. On `/ai/` and `/pilot/` the frame is sandboxed without `allow-same-origin`.
 - The runtime worker imports `lockdown.mjs` before anything else.
 - The workbench, `ai/` and `pilot/` carry `playgroundPolicy()` (tools/html.mjs): no `unsafe-eval`, scripts by hash, `connect-src` to this origin and GitHub - wide only on the two AI pages, for the model a reader types. A new host the page fetches from goes into that policy, or `tests/csp.spec.js` fails.
@@ -346,7 +347,7 @@ Each bullet names the design doc that explains it. Keep them true.
   needs the abap2UI5 sources to go too, and those are what somebody
   control-clicks into to see how the framework does something. Reading the
   framework is the playground; a tenth of the download does not buy it.
-- **The generated frontend is a stub in the framework bundle.** The 69
+- **The generated frontend is a stub in the framework bundle.** The
   `z2ui5_cl_ui5f_*` classes are registered by name and throw a sentence from
   `get()`; only the http handler's GET branch reads them, and the playground
   never GETs — the frame's document comes from `dist/app`. Wiring that branch

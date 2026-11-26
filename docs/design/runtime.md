@@ -7,14 +7,18 @@
 
 At run time the pieces meet like this: the UI5 frontend runs in an iframe and
 POSTs to its backend with a plain `fetch` — to the frame's own URL, because
-the component starts with `checkLocal: true` in its component data (step 3
-of [build-pipeline.md](build-pipeline.md)). That flag used to be `window.z2ui5.checkLocal`, set by the bridge
-ahead of the bootstrap. abap2UI5#2777 removed the `window.z2ui5` global — the
-frontend keeps its state per component now (`component.ctx.state`, on the
-component ComponentSupport names `container-z2ui5`) — and `Component.init()`
-reads the flag from its component data and from nowhere else, so a flag set
-on the window is ignored, every roundtrip goes to the manifest's path, which
-this site does not have, and nothing renders. Nothing in the playground reads
+the component starts with `endpoint: "index.html"` (and `ownsPage: true`) in
+its component data (step 3 of [build-pipeline.md](build-pipeline.md)), what
+`core/Embed.js` hands it in every abap2UI5 host since 1.151.0. Until 1.150.0
+it was `checkLocal: true`, and before abap2UI5#2777 `window.z2ui5.checkLocal`,
+set by the bridge ahead of the bootstrap. The frontend keeps its state per
+component (`component.ctx.state`, on the component ComponentSupport names
+`container-z2ui5`) and `Component.init()` reads the endpoint from its
+component data and from nowhere else; without it every roundtrip goes to the
+manifest's path, which this site does not have, and nothing renders. The
+restart in place creates the component again with the same data
+(`COMPONENT_DATA` in `frontend-bridge.js`, which the build compares with its
+own). Nothing in the playground reads
 the frontend's state - the Roundtrips tab is fed by `offerFrameBridge( )` in
 `agent-hooks.mjs` - with one exception: the AI rooms ask the frontend to
 send a roundtrip, to type a value and to say which slots are open, by

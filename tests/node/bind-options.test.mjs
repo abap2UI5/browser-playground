@@ -3,7 +3,7 @@
 // main( ) - steps 3 and 4 of the visual builder.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bindingAbap, clientOf, editableByDefault, EVENT_NAME, eventAbap, publicAttributes, withEventArm } from "../../src/shell/bind-options.mjs";
+import { bindingAbap, clientOf, EVENT_NAME, eventAbap, publicAttributes, withEventArm } from "../../src/shell/bind-options.mjs";
 
 const APP = `CLASS zcl_app DEFINITION PUBLIC.
   PUBLIC SECTION.
@@ -48,10 +48,9 @@ test("the client as the chain calls it, and the binding and event ABAP written w
   assert.equal(clientOf(APP), "client");
   assert.equal(clientOf("v = me->client->_bind( name )"), "me->client");
   assert.equal(clientOf("nothing bound yet"), "client");
-  assert.equal(bindingAbap("client", "name", false), "client->_bind( name )");
-  assert.equal(bindingAbap("me->client", "name", true), "me->client->_bind_edit( name )");
+  assert.equal(bindingAbap("client", "name"), "client->_bind( name )");
+  assert.equal(bindingAbap("me->client", "name"), "me->client->_bind( name )");
   assert.equal(eventAbap("client", "SAY_HI"), "client->_event( `SAY_HI` )");
-  assert.ok(editableByDefault("value") && editableByDefault("selected") && !editableByDefault("text"));
   assert.ok(EVENT_NAME.test("SAVE_ALL") && !EVENT_NAME.test("save all") && !EVENT_NAME.test("1A"));
 });
 

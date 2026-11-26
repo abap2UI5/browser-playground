@@ -29,7 +29,10 @@ async function toggleBreakpoint(page, line, file = MAIN_FILE) {
 }
 
 // The app this file drives: a loop through a private method, a table, a
-// BREAK-POINT, and a second event that changes an attribute.
+// BREAK-POINT, and a second event that changes an attribute. The statement
+// after the event's call (L.more + 1, where F7 comes back to) was
+// client->view_model_update( ), which abap2UI5 1.151.0 removed - the model
+// reaches the browser by itself; any statement serves the step.
 const APP = `CLASS ${MAIN_CLASS} DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES z2ui5_if_app.
@@ -65,7 +68,7 @@ CLASS ${MAIN_CLASS} IMPLEMENTATION.
           )->stringify( ) ).
     ELSEIF client->check_on_event( \`MORE\` ).
       total = add( 10 ).
-      client->view_model_update( ).
+      CLEAR lv_sum.
     ENDIF.
   ENDMETHOD.
 

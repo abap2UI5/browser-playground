@@ -81,7 +81,6 @@ read them before touching `tools/` or `src/runtime/`.
 | `frontend-bridge.js` | Injected into the app frame, talks to the page by `postMessage` only: the fetch interception, restart in place, the AI calls, storage shims for an opaque frame |
 | `sw.js` | The service worker (build id, hashes and chunks substituted by the build; `verifiedHit()`) |
 | `roundtrips.mjs` | The recorded roundtrips (bounded at 200, cleared per Run) |
-| `wire.mjs` | `asProtocol2()`: a protocol-3 answer (abap2UI5 1.151.0: `VIEWS`, `NAV`, `ACTIONS`) in the protocol-2 shape the Roundtrips summary and the vendored agent client read |
 | `insight.mjs` | The bottom panel: strip, folding, drag, redraw, empty-tab shrink |
 | `insight-common.mjs` | What a tab may ask of the panel (`empty()`, `blockHead()`, …) |
 | `insight-<tab>.mjs` | One module per tab: `problems` (+ Fix them bar, `fixableSaid()`), `outline`, `view` (`viewTab()`; the Properties sheet is `view-sheet.mjs`), `tests` (`testsTab()`), `roundtrips` (`roundtripsTab()`), `state` (app attributes per roundtrip), `console` (WRITE output, `#console-count`), `log` (and its one action, e.g. the rename offer), `config` (one tab, a switch between the two checkers); the Debugger tab is drawn by the `debugger.mjs` chunk |

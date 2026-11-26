@@ -225,10 +225,17 @@ and its ComponentSupport `<div>` name the component `z2ui5`, which here is
 `bundle/webapp`'s `Component.js` (app_source's own component and view are
 not taken). The frontend's wire moved to protocol 3 in the same release
 (`VIEWS`, `NAV`, `ACTIONS` in place of `S_ACTION.T_SYSTEM`/`T_CUSTOM`); the
-frame does not care - frontend and backend come from the one pin - but the
-playground's own readers of an answer do, and read it through
-`src/shell/wire.mjs` (the Roundtrips summary, and the vendored agent client,
-which speaks protocol 2 until abap2UI5/mcp-server moves).
+frame does not care - frontend and backend come from the one pin - and the
+playground's own readers of an answer read both protocols through the
+vendored agent client (`src/vendor/agent/snapshot.mjs`: `protocolOf()`,
+`viewChanges()`, `followUpActions()`; abap2UI5/mcp-server speaks 2 and 3
+since 7906a2f) in the AI mirror and operator, and the Roundtrips summary
+reads both on its own (`summarise()` in `roundtrips.mjs` - the shell entry
+imports it statically and would carry the client's 34 KB with it;
+`tests/node/protocol.test.mjs` holds the two readings together). The shim
+that turned a protocol-3 answer back into protocol 2 for both
+(`src/shell/wire.mjs`) is gone; it also kept the client's sessions on
+protocol 2 against a protocol-3 backend.
 
 ## Debug builds
 

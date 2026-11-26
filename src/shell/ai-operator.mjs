@@ -13,13 +13,9 @@
 // screen the reader is looking at, never on a copy that went stale while
 // they took the controls.
 import { AgentError, createAppClient } from "../vendor/agent/appclient.mjs";
-import { analyzeScreen, applyResponse, emptyState, FRONTEND_EVENTS, getAt, modelKeyOf } from "../vendor/agent/snapshot.mjs";
+import { analyzeScreen, applyResponse, emptyState, FRONTEND_EVENTS, getAt, modelKeyOf, protocolOf, SLOT_ORDER } from "../vendor/agent/snapshot.mjs";
 import { clip } from "./ai-common.mjs";
-// The vendored fold and client speak protocol 2; the pinned framework may
-// answer in 3 - every answer they see goes through this first (wire.mjs).
-import { asProtocol2, bodyAsProtocol2 } from "./wire.mjs";
 
-const SLOTS = ["MAIN", "NEST", "NEST2", "POPUP", "POPOVER"];
 export const MAX_ROWS = 20;
 // A dump of the reader's click as the model is told it.
 export const MAX_ERROR_TEXT = 2000;
@@ -91,6 +87,10 @@ export function fitSnapshot(snap, budget) {
 export function createMirror({ onChange = () => {} } = {}) {
   const mirror = {
     state: emptyState(),
+    // The wire the framework answered the last time (protocolOf): 3 from
+    // abap2UI5 1.151.0 on. The replay speaks it too, so the client's session
+    // takes the backend's protocol, not the replay's (replayOf( )).
+    protocol: 2,
     version: 0,
     error: null,
     observe(body, response) {
@@ -120,14 +120,15 @@ export function createMirror({ onChange = () => {} } = {}) {
         return;
       }
       if (!json?.S_FRONT) return;
-      mirror.state = applyResponse(mirror.state, asProtocol2(json));
+      mirror.protocol = protocolOf(json);
+      mirror.state = applyResponse(mirror.state, json);
       mirror.error = null;
       mirror.version += 1;
       onChange();
     },
     // A slot the frontend closed without a roundtrip - a popup's own close.
     closeSlot(slot) {
-      mirror.state = applyResponse(mirror.state, { S_FRONT: { S_ACTION: { T_SYSTEM: [["VIEW_SLOTS", "destroy", slot]] } } });
+      mirror.state = applyResponse(mirror.state, { S_FRONT: { PROTOCOL: 3, VIEWS: { [slot]: { DESTROY: true } } } });
       mirror.version += 1;
       onChange();
     },
@@ -182,20 +183,28 @@ export function describeMirror(mirror, maxRows = MAX_ROWS, typed = {}) {
  * open slot displayed again, main first (a main display drops the rest);
  * the model the topmost modal layer reads - a popup's own, which may be
  * another app's (a z2ui5_cl_pop_*), else the page's; and the last answer's
- * client work (T_CUSTOM: the toast, the message box), which the snapshot
- * reads its messages from.
+ * client work (ACTIONS, T_CUSTOM under protocol 2: the toast, the message
+ * box), which the snapshot reads its messages from. Written in the protocol
+ * the framework spoke (mirror.protocol): the client takes a session's
+ * protocol from its first answer, and a session marked 2 against a
+ * protocol-3 backend would send the wrong timer tick and table window.
  */
-function replayOf(state) {
-  const T_SYSTEM = [];
-  for (const slot of SLOTS) {
-    const s = state.slots[slot];
-    if (s) T_SYSTEM.push(["VIEW_SLOTS", "display", slot, s.xml, s.options ?? {}]);
-  }
+function replayOf(state, protocol) {
+  const shown = SLOT_ORDER.filter((slot) => state.slots[slot]).map((slot) => [slot, state.slots[slot]]);
   const model = (state.slots.POPUP && state.models.POPUP) || state.models.MAIN || state.models.POPOVER;
-  return {
-    S_FRONT: { ID: state.id, APP: state.app, S_ACTION: { T_SYSTEM, T_CUSTOM: state.custom ?? [] } },
-    MODEL: model?.data ?? {},
-  };
+  const front = protocol >= 3
+    ? {
+      PROTOCOL: 3,
+      VIEWS: Object.fromEntries(shown.map(([slot, s]) => [slot, { XML: s.xml, OPT: s.options ?? {} }])),
+      ACTIONS: state.custom ?? [],
+    }
+    : {
+      S_ACTION: {
+        T_SYSTEM: shown.map(([slot, s]) => ["VIEW_SLOTS", "display", slot, s.xml, s.options ?? {}]),
+        T_CUSTOM: state.custom ?? [],
+      },
+    };
+  return { S_FRONT: { ID: state.id, APP: state.app, ...front }, MODEL: model?.data ?? {} };
 }
 
 // ---------------------------------------------------------- the operator
@@ -225,7 +234,7 @@ export function createOperator({ app, mirror, ui = {}, halted = () => false }) {
         return { status: 200, headers: {}, body: JSON.stringify(answer) };
       }
       const response = await host.drive(body);
-      return { status: response.status, headers: {}, body: bodyAsProtocol2(String(response.body ?? "")) };
+      return { status: response.status, headers: {}, body: String(response.body ?? "") };
     },
     location: (app) => ({ origin: window.location.origin, pathname: "/", search: `?app_start=${encodeURIComponent(app)}` }),
     backendHint: "",
@@ -297,7 +306,7 @@ export function createOperator({ app, mirror, ui = {}, halted = () => false }) {
     }
     const app = mirror.state.app || host.appClass();
     const start = async (values) => {
-      replay = replayOf(mirror.state);
+      replay = replayOf(mirror.state, mirror.protocol);
       try {
         return (await client.start(app, { maxRows: MAX_ROWS, ...(values ? { values } : {}) })).session;
       } finally {

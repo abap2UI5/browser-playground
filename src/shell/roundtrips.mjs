@@ -14,7 +14,6 @@
 // fresh database and a fresh frame, and the roundtrips of the last one would
 // describe an app that is gone), and bounded, because an app with a timer
 // can produce one every second for as long as the tab is open.
-import { asProtocol2 } from "./wire.mjs";
 
 const LIMIT = 200;
 // And bounded by size, not only by count: each entry keeps both bodies parsed,
@@ -67,9 +66,9 @@ export function recordRoundtrip({ request, response, ms }) {
     // The app's attributes as this roundtrip left them (src/runtime/
     // app-state.mjs), for the State tab; undefined when it never got that far.
     state: response.state && typeof response.state === "object" ? response.state : undefined,
-    // The summary reads the answer in protocol 2's shape (wire.mjs); the
-    // detail shows it as it went over the wire.
-    ...summarise(req, asProtocol2(res), response.status),
+    // The summary reads protocol 2 and 3 (summarise( )); the detail shows
+    // the answer as it went over the wire.
+    ...summarise(req, res, response.status),
   };
   entry.size = (typeof request === "string" ? request.length : 0)
     + (typeof response.body === "string" ? response.body.length : 0)
@@ -92,10 +91,26 @@ function parse(text) {
 
 // What a row says: the event that caused the roundtrip, and what the answer
 // did. Read off the wire format Server.js documents - S_FRONT.EVENT and
-// T_EVENT_ARG on the way in, MODEL and S_FRONT.S_ACTION on the way out. An
-// action list entry is [target, method, ...args]; the ones that carry a
-// view (VIEW_SLOTS display <slot> <xml>) are the ones worth naming, and the
-// XML is kept aside for the detail.
+// T_EVENT_ARG on the way in, MODEL and the actions on the way out. Protocol 3
+// (abap2UI5 1.151.0 on) sends VIEWS ({ <slot>: { XML, OPT } | { DESTROY } },
+// applied in SLOT_ORDER), NAV and the app's ACTIONS; protocol 2 sent
+// S_FRONT.S_ACTION's T_SYSTEM (["VIEW_SLOTS","display",<slot>,<xml>], …)
+// and T_CUSTOM. An action is [target, method, ...args]; the views displayed
+// are the ones worth naming, and their XML is kept aside for the detail.
+//
+// The vendored agent client reads both too (src/vendor/agent/snapshot.mjs:
+// protocolOf( ), viewChanges( ), followUpActions( )), and this is the same
+// reading on purpose rather than an import of it: the shell entry imports
+// this module statically, and the client would come with it - 34 KB of
+// snapshot.mjs and viewxml.mjs on every page, for a row of words.
+const SLOT_ORDER = ["MAIN", "NEST", "NEST2", "POPUP", "POPOVER"];
+
+const speaks3 = (front) => {
+  const n = Number(front.PROTOCOL);
+  if (front.PROTOCOL !== undefined && front.PROTOCOL !== null && Number.isFinite(n)) return n >= 3;
+  return "VIEWS" in front || "NAV" in front || "ACTIONS" in front;
+};
+
 function summarise(req, res, status) {
   const front = req?.value?.S_FRONT ?? {};
   const event = front.EVENT || (front.ID ? "(navigation)" : "app start");
@@ -106,19 +121,36 @@ function summarise(req, res, status) {
   const views = [];
   if (status >= 400) {
     did.push(`${status} ${status === 500 ? "dump" : "error"}`);
-  } else if (res) {
-    const actions = res.S_FRONT?.S_ACTION ?? {};
-    for (const action of actions.T_SYSTEM ?? []) {
-      if (!Array.isArray(action)) continue;
-      const [target, method, ...rest] = action;
-      if (target === "VIEW_SLOTS" && method === "display") {
-        did.push(`view ${rest[0]}`);
-        if (typeof rest[1] === "string") views.push({ slot: String(rest[0]), xml: rest[1] });
-      } else {
-        did.push([target, method, rest.find((r) => typeof r === "string")].filter(Boolean).join(" "));
+  } else if (res && typeof res === "object") {
+    const out = res.S_FRONT && typeof res.S_FRONT === "object" ? res.S_FRONT : {};
+    const three = speaks3(out);
+    if (three) {
+      const slots = out.VIEWS && typeof out.VIEWS === "object" ? out.VIEWS : {};
+      for (const slot of [...SLOT_ORDER, ...Object.keys(slots).filter((k) => !SLOT_ORDER.includes(k))]) {
+        const entry = slots[slot];
+        if (!entry || typeof entry !== "object") continue;
+        if (entry.DESTROY === true) {
+          did.push(`VIEW_SLOTS destroy ${slot}`);
+        } else {
+          did.push(`view ${slot}`);
+          if (typeof entry.XML === "string") views.push({ slot, xml: entry.XML });
+        }
+      }
+      if (out.NAV && typeof out.NAV === "object") did.push("ROUTER sync");
+    } else {
+      for (const action of out.S_ACTION?.T_SYSTEM ?? []) {
+        if (!Array.isArray(action)) continue;
+        const [target, method, ...rest] = action;
+        if (target === "VIEW_SLOTS" && method === "display") {
+          did.push(`view ${rest[0]}`);
+          if (typeof rest[1] === "string") views.push({ slot: String(rest[0]), xml: rest[1] });
+        } else {
+          did.push([target, method, rest.find((r) => typeof r === "string")].filter(Boolean).join(" "));
+        }
       }
     }
-    for (const action of actions.T_CUSTOM ?? []) {
+    const custom = three ? out.ACTIONS : out.S_ACTION?.T_CUSTOM;
+    for (const action of Array.isArray(custom) ? custom : []) {
       if (Array.isArray(action)) did.push(String(action[0] ?? "custom"));
       else if (typeof action === "string") did.push("custom JS");
     }

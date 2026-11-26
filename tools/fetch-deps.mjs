@@ -35,12 +35,13 @@ export const PINS = [
      * the bundle - which a static site cannot answer. Taken from the clone
      * the framework is transpiled from, frontend and backend cannot drift.
      *
-     * 9962d8a9 is abap2UI5 main carrying release 1.151.0. Move it to the
-     * commit of the tag 1.151.0 once that is cut (it is to be put on exactly
-     * this commit, so the move changes nothing but the sha's provenance). */
+     * 354abebe is the tag 1.151.0. It moved here from 9962d8a9, abap2UI5
+     * main carrying the release before the tag was cut; between the two only
+     * backlog notes, CI scripts and abap2UI5's own dev dependencies changed -
+     * nothing under src/, bundle/ or app_source/, nor the open-abap-core pin. */
     name: "abap2ui5",
     url: "https://github.com/abap2UI5/abap2UI5",
-    sha: "9962d8a93bb095f370398252c20161e30739f1f3",
+    sha: "354abebecc38d4b8e28fda2d67ddadf76d91d432",
     note: "the framework itself - src/ is downported and transpiled; bundle/webapp and app_source/webapp are the frontend",
   },
   {

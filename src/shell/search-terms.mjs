@@ -17,18 +17,20 @@
 // answer "is this row in or out", every word as typed, with nothing set aside
 // and nothing guessed, or a linked `?q=` would show rows that do not carry
 // the words in it. What they share is what must not differ between them -
-// how a letter is folded - and that is the engine's own function, imported,
-// rather than a copy of it here. The AI tools' rankEntries( ) in
-// ai-common.mjs is a third reader of the same samples and can take the same
-// two pieces: foldCase here, queryTerms( ) there.
-import { normalise } from "./search-engine.mjs";
+// how a letter is folded - and the fold below is the engine's, spelled the same
+// way: search-engine.mjs is abap2UI5/docs' file byte for byte
+// (tools/check-search-engine.mjs), which keeps its fold to itself, so this is
+// the one line repeated here, and tests/node/search-terms.test.mjs holds the
+// two to the same answer. The AI tools' rankEntries( ) in ai-common.mjs is a
+// third reader of the same samples and can take the same two pieces: foldCase
+// here, queryTerms( ) there.
 
 /** Lower-cased without changing the length: "İ" (a Turkish keyboard's capital
  *  I) lower-cases to two code units and "İNPUT" matched nothing at all; the
  *  dotless "ı" is folded with it, so all four spellings find the same rows.
  *  Haystacks go through the same function as queries. The search engine's
- *  own fold, so the bar's box and these filters agree. */
-export const foldCase = (text) => normalise(String(text ?? ""));
+ *  fold, so the bar's box and these filters agree. */
+export const foldCase = (text) => String(text ?? "").replace(/\u0130/g, "I").toLowerCase().replace(/\u0131/g, "i");
 
 /** The words of a query, lower-cased; an empty query is no words at all. */
 export const termsOf = (query) => foldCase(String(query ?? "").trim()).split(/\s+/).filter(Boolean);

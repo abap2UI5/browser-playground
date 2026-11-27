@@ -54,6 +54,7 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:unit
+      - run: npm run check:search-engine
 
   # The tests, in the same four shards check.yml runs them in - the build
   # is two minutes with its caches warm and the tests seventeen on one

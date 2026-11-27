@@ -14,9 +14,10 @@
  * this project"), asked from any of the four bars, answered by leaving the
  * page. Both belong.
  *
- * The counterpart over there is docs/.vitepress/theme/SearchBox.vue, which is
- * this box as a Vue component; the matching underneath both is
- * search-engine.mjs, which is a copy of the documentation's file. This one is
+ * The counterpart on the home page is public/search.js in
+ * abap2UI5/abap2UI5.github.io; the matching underneath both is
+ * search-engine.mjs, abap2UI5/docs' scripts/lib/search-engine.js byte for byte
+ * (tools/check-search-engine.mjs compares it in CI). This one is
  * plain DOM because two of the three documents that use it have no framework
  * and one of them is written 772 times by a build script.
  *

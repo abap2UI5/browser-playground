@@ -72,8 +72,8 @@ read them before touching `tools/` or `src/runtime/`.
 | `ui5-libs.mjs` | Which UI5 library a control ships in; `cmpVersion` |
 | `ui5-libraries.mjs` | `UI5_VERSION`, and `UI5_LIBRARIES`, the closed set this site carries |
 | `search-box.mjs` | The 404's search box (through `src/catalogue/search-entry.mjs`); the playground's page has none |
-| `search-engine.mjs` | Its matcher — a copy of abap2UI5/docs' `search-engine.js`, plus `normalise` |
-| `search-terms.mjs` | The dialog's and catalogue's free-text filter (`foldCase`, `queryTerms`) |
+| `search-engine.mjs` | Its matcher — abap2UI5/docs' `scripts/lib/search-engine.js` byte for byte, never edited here: `tools/check-search-engine.mjs` (`npm run check:search-engine`, in the lint job) compares it with docs' `main` and fails on any difference, and under CI when it cannot reach it |
+| `search-terms.mjs` | The dialog's and catalogue's free-text filter (`foldCase` - the engine's fold, spelled again and held to it by `tests/node/search-terms.test.mjs` -, `termsOf`) |
 | `runtime-client.mjs` | The page's handle on the runtime worker (HEAD probe, STALLED); the debugger's channel, the watchdog held while stopped, Stop (`DEBUG_STOPPED`) |
 | `debug.mjs` | The debugger in the shell entry, kept small: `offersDebugger`, the compile option, `debuggerReady()`, the chunk's import |
 | `debugger.mjs` | The debugger (chunk): breakpoints, the stop, stepping, the Debugger tab (stack, variables, watches, table view), F5-F9 |
@@ -175,6 +175,7 @@ read them before touching `tools/` or `src/runtime/`.
 | `tools/check-instrument.mjs` | The debug build over abap2UI5, the samples and open-abap: every object must parse instrumented, and no statement that runs may be left without a stop |
 | `tools/serve.mjs` | Dev/test server; mounts `dist/` three ways, answers misses with `404.html` |
 | `tools/vendor-agent.mjs` | Vendors and checks `src/vendor/agent/` |
+| `tools/check-search-engine.mjs` | `src/shell/search-engine.mjs` against abap2UI5/docs' `scripts/lib/search-engine.js` on `main`, byte for byte (`npm run check:search-engine`, in the lint job of `check.yml` and `pages.yml`); unreachable is a warning on a laptop and a failure under CI |
 | `tools/docs-examples-summary.mjs` | The documentation examples' measurement (Playwright's JSON report of `docs-examples.spec.js`) as the job summary's table; fails on an empty or red one |
 | `tools/ai-eval-summary.mjs` | The AI App Builder's measurement (`ai-eval.jsonl`) as the job summary's table; fails on a task without a line |
 | `tests/*.spec.js` | Playwright against the built `dist/` (`bfcache.spec.js` reads rather than runs) |
@@ -193,6 +194,7 @@ npm run check      # build -> check:size -> check:instrument -> test, what check
 npm run lint       # ESLint
 npm run typecheck  # tsc over files that start with // @ts-check (jsconfig: checkJs off)
 npm run test:unit  # node:test over tests/node/*.test.mjs - no build, no browser
+npm run check:search-engine  # the bar's matcher against abap2UI5/docs' file on main (network)
 npm run check:instrument  # the debugger's hooks over every sample and framework class (after a build)
 ```
 
@@ -217,7 +219,7 @@ npm run check:instrument  # the debugger's hooks over every sample and framework
 
 | | |
 |---|---|
-| `check.yml` | Every non-main branch and PR: a `lint` job (lint, typecheck, test:unit) beside four test shards — Chromium `--shard=n/3` ×3 and WebKit on its own — each building with `.github/actions/build` (caches for `deps/`, `~/.ui5`, the downport) and checking the size budget and the debug build (`check-instrument.mjs`). Two workers per runner, traces on retry, the service worker blocked except in `worker.spec.js` |
+| `check.yml` | Every non-main branch and PR: a `lint` job (lint, typecheck, test:unit, check:search-engine) beside four test shards — Chromium `--shard=n/3` ×3 and WebKit on its own — each building with `.github/actions/build` (caches for `deps/`, `~/.ui5`, the downport) and checking the size budget and the debug build (`check-instrument.mjs`). Two workers per runner, traces on retry, the service worker blocked except in `worker.spec.js` |
 | `pages.yml` | Pushes to `main` and **nightly**: the same lint job and four shards, a fifth runner building the artefact, deploy once all are green (`needs: [lint, test, build]`) |
 | `upstream.yml` | Weekly: build and test against upstream `HEAD` without moving pins; opens or extends an issue on failure |
 | `docs-examples.yml` | Weekly and by hand: checks out abap2UI5/docs, takes its Run-button worklist (`scripts/list-runnable.mjs --json`) and opens every example here (`tests/docs-examples.spec.js`); `tools/docs-examples-summary.mjs` writes "n of m started" and a row per failing page into the job summary, and a red run opens or extends one `docs-examples` issue. A measurement, not a gate |

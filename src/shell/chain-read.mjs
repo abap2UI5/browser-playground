@@ -150,6 +150,14 @@ function closingTemplate(source, from) {
       at = closingQuote(source, at, ch);
       continue;
     }
+    // A comment inside an embedded expression that runs over lines - `"` to
+    // the line end, `*` in the first column - holds no brace: a `}` in it
+    // does not end the expression. The linter's `scrub( )` reads it so.
+    if (depth > 0 && (ch === '"' || (ch === "*" && source[at - 1] === "\n"))) {
+      const eol = source.indexOf("\n", at);
+      at = eol === -1 ? source.length : eol;
+      continue;
+    }
     if (ch === "{") depths[top] += 1;
     else if (ch === "}") depths[top] = Math.max(0, depth - 1);
     else if (ch === "|" && depth === 0) {

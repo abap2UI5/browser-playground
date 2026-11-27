@@ -237,15 +237,23 @@ build script. The playground's bundle imports it; the catalogue and every
 per-sample page load it as `dist/samples/search.mjs`, one module for all 773
 documents, bundled from `src/catalogue/search-entry.mjs` and budgeted in
 `tools/check-size.mjs`. `src/shell/search-engine.mjs` (the matching) IS a copy
-— of `docs/.vitepress/theme/search-engine.js` over there, kept in step by hand
-like the palette: the ranking rules (stop words, the phrase bonus, the field
-matched with its spaces taken out, the plural, what happens when nothing
-matches) are documented and tested THERE, in `test/search.test.mjs`, and a
-change to the matching starts there and is copied here. The one difference
-from that copy is that this one exports `normalise` (the case folding), which
-`foldCase` in `src/shell/search-terms.mjs` - the samples dialog's and the
-catalogue's filter match - builds on, so the two kinds of search fold case
-alike. (The AI's catalogue search, `rankEntries` in `ai-common.mjs`, could
+— of `scripts/lib/search-engine.js` in abap2UI5/docs, byte for byte. It used to
+be kept in step by hand like the palette, and drifted: it lost the scopes, the
+jumps, the actions and the guarded storage access, and its header named a
+master path (`docs/.vitepress/theme/search-engine.js`) that no longer existed.
+Now `tools/check-search-engine.mjs` compares it with the file on docs' `main`
+in the lint job and fails on any difference (and under CI when it cannot reach
+it; on a laptop that is a warning). The ranking rules (stop words, the phrase
+bonus, the field matched with its spaces taken out, the plural, what happens
+when nothing matches) are documented and tested THERE, in
+`test/search.test.mjs`, and a change to the matching starts there and is copied
+here unchanged. That file keeps its case folding to itself, so `foldCase` in
+`src/shell/search-terms.mjs` - the samples dialog's and the catalogue's filter
+match - spells the same one line again, and `tests/node/search-terms.test.mjs`
+holds the two to the same answer, so the two kinds of search fold case
+alike. The last query is stored under the documentation's key
+(`abap2ui5-docs:search`), which the home page's box uses too: one origin, one
+memory of the last search. alike. (The AI's catalogue search, `rankEntries` in `ai-common.mjs`, could
 adopt the same terms later.) Version compares go the same way: the samples
 dialog uses `cmpVersion` from `ui5-libs.mjs` rather than one of its own. What this box adds
 of its own is the line above the rows when the answer is not to the query
@@ -276,7 +284,7 @@ four bars, and leaves the page to answer it.
 | the theme | `abap2ui5:theme` (family.mjs; `abap2ui5-playground:theme` before, moved once), read before the first paint by ONE script, `THEME_BOOT` in `src/shell/theme-boot.mjs`, which the build writes into every document here (the playground's pages, the catalogue, every sample page, the 404) - the one `localStorage` touch outside `storage.mjs` - and by a head script over there. The switch in any of the four bars turns all four - the layout editor's included, which reads the same key |
 | where you were | `src/shell/site-memory.mjs`, imported by the shell and the catalogue bundles and by the per-sample pages through `samples/page.mjs` (`src/catalogue/page-entry.mjs`, one module for all 772 of them beside `search.mjs` - it used to be an inline copy kept in step by hand). Every samples page writes its own path down — the catalogue's *with its filters*, because the filters are the page there — and the Samples item on the other bars is lifted to it: at boot, again when the page is shown or the tab looked at again, and on the click itself (`keepSiteLinksCurrent()`), because a link lifted once and left open carries the position from before. A stored value is **checked, not followed**: resolved against this origin and kept only if it is still inside the href the markup carries, so a poisoned or stale key costs a restored position and nothing else. All three items open in the same tab — the sites are one site, and a bar that opened one of them in a second window was the one asymmetry between the four bars |
 | where **on** the page you were | The same file, keys `:scroll` (a small map of path → offset, the twelve most recent) and `:returning`. The item above came back to the page and to the TOP of it, which on a list of 770 rows is most of the way to not having remembered anything. Restored **on arrival by the bar and nowhere else**: a `data-back` link writes down how far down this page the reader is and one record saying where they are being sent, and the page that *is* that, arriving within half a minute and with no hash of its own, honours it. Restoring on every load would fight the browser's own back-and-forward restoration and would drop a reader who followed an ordinary link into the middle of a page. Checked the same way a stored path is — `scrollTo` takes whatever it is given |
-| the last thing you searched for | `src/shell/search-engine.mjs`, key `:search`, described above. Checked: a string, short, and less than half an hour old |
+| the last thing you searched for | `src/shell/search-engine.mjs`, key `abap2ui5-docs:search` (the documentation's file, shared with the home page's box), described above. Checked: a string, short, and less than half an hour old |
 
 **A refresh starts over.** All four of those, bar the theme, are memories of a
 JOURNEY — state one page hands the next because a click here makes a new

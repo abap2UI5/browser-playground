@@ -86,8 +86,15 @@ const TRANSFERRED = [
    * files of their own beside each rule that only `./rule-docs` imports, so
    * lint.mjs is 192,270 bytes (0.18 MB) and the two files together 832,721
    * (0.79 MB, registry.mjs 640,451). What 0.11.0 still adds over 0.9.0 is
-   * 0.10.0's new rules. */
-  { file: "editor/*.mjs", limit: 0.85 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
+   * 0.10.0's new rules.
+   *
+   * 0.85 -> 0.88 MB with linter 0.13.0 on transpiler 2.14.35: 892,473 bytes
+   * (0.851 MB) - lint.mjs 210,344 (0.11.0: 192,270; 0.12/0.13 added
+   * removed-api with its vendored deprecations table and the rules that
+   * read a client-> call on frozen-builder classes), registry.mjs 682,129
+   * (640,451 before the transpiler and abaplint moved). 1.1 KB over the old
+   * line; the new one leaves room for a patch release, not for a minor. */
+  { file: "editor/*.mjs", limit: 0.88 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
   { file: "runtime/framework.mjs", limit: 0.8 * MB, note: "abap2UI5 and open-abap, transpiled" },
   /* 0.60 until the pin bump to abap2UI5@4e0f3a01: the framework grew by
    * z2ui5_cl_ui5_llm_guide (a thousand lines) and the corpus to 0.61 MB.

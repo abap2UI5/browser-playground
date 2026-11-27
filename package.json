@@ -26,7 +26,7 @@
     "check:search-engine": "node tools/check-search-engine.mjs"
   },
   "devDependencies": {
-    "@abap2ui5/linter": "0.11.0",
+    "@abap2ui5/linter": "0.13.0",
     "@abaplint/cli": "2.120.113",
     "@abaplint/core": "2.120.113",
     "@abaplint/database-sqlite": "2.14.12",

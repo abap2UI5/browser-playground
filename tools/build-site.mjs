@@ -17,6 +17,7 @@ import * as esbuild from "esbuild";
 import { MONACO_CSS, abap2ui5LinterPlugin, monacoCssPlugin, nodeStubPlugin } from "./esbuild-plugins.mjs";
 import { SAMPLE_LIST, SAMPLE_REPO } from "../src/editor/sample-list.mjs";
 import { rawUrlOf } from "../src/shell/catalogue-urls.mjs";
+import { ABAP2UI5 } from "../src/shell/deep-link.mjs";
 import { exercisesFrom } from "../src/shell/exercise-check.mjs";
 import { writeIndex } from "./site-documents.mjs";
 import { chunks, writeServiceWorker } from "./service-worker.mjs";
@@ -174,6 +175,20 @@ function writeCorpus() {
     );
   }
   add(path.join(DEPS, "abap2ui5", "src"));
+  // A link's sibling follow (src/shell/deep-link.mjs) tells abap2UI5's own
+  // objects from a sample's by name, without the corpus - it runs before the
+  // corpus is fetched. Held here against the pinned framework: an object that
+  // does not fit ABAP2UI5 would be asked for beside every linked sample that
+  // names it, a 404 that also takes one of the six slots a real sibling needs.
+  const unmatched = [
+    ...new Set(Object.keys(files).map((name) => name.split(".")[0]).filter((n) => /^z2ui5_/i.test(n) && !ABAP2UI5.test(n))),
+  ];
+  if (unmatched.length > 0) {
+    throw new Error(
+      `build-site: abap2UI5 has objects ABAP2UI5 in src/shell/deep-link.mjs does not know as its own: ${unmatched.join(", ")}. ` +
+        "Widen the pattern, or a link to a sample naming one asks for it beside the sample.",
+    );
+  }
   add(path.join(DEPS, "open-abap-core", "src"));
 
   const out = path.join(DIST, "editor");

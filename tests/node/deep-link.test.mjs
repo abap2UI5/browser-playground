@@ -112,9 +112,35 @@ test("the classes a source needs from beside it - not the framework's, not a com
     "    DATA r TYPE REF TO zcl_typed.",
     "    DATA d TYPE REF TO data.",
     "    CREATE OBJECT o TYPE zcl_created.",
-    "    z2ui5_cl_util=>x( ). cl_abap_typedescr=>describe( ). NEW lcl_local( ).",
+    "    z2ui5_cl_ui5_view_builder=>factory( ). cl_abap_typedescr=>describe( ). NEW lcl_local( ).",
+    "    DATA c TYPE REF TO z2ui5_if_client. DATA j TYPE REF TO z2ui5_if_ajson. z2ui5_cl_srt_typedescr=>x( ).",
   ].join("\n");
   assert.deepEqual(instantiatedClasses(source).sort(), ["zcl_created", "zcl_detail", "zcl_typed", "zcl_util"]);
+});
+
+// abap2UI5/abap2UI5#3075: the samples are z2ui5_ classes too, and a bare
+// /^z2ui5_/ took 024's NEW z2ui5_cl_smp_app_025( ) for the framework's.
+test("a sample's z2ui5_ sibling is followed - only abap2UI5's own objects are the framework", () => {
+  const source = [
+    "    client->nav_app_call( NEW z2ui5_cl_smp_app_025( ) ).",
+    "    DATA a TYPE REF TO z2ui5_if_app. DATA t TYPE z2ui5_t_01. z2ui5_cl_ajson=>parse( x ).",
+    "    DATA u TYPE REF TO z2ui5_cl_ui5f_x.",
+  ].join("\n");
+  assert.deepEqual(instantiatedClasses(source), ["z2ui5_cl_smp_app_025"]);
+});
+
+// z2ui5_cl_smp_app_104 starts its sub-apps with CREATE OBJECT ... TYPE (name)
+// and has their names only as literals - opened without them, the first
+// selection died with "The class ??? does not exist".
+test("a literal that is a whole class name is followed - not a sentence that mentions one", () => {
+  const source = [
+    "    t_tab = VALUE #( ( info = `z2ui5_cl_smp_app_105` ) ( info = 'zcl_sub_two' ) ).",
+    "    IF sub_app <> `Z2UI5_CL_SMP_APP_105`. ENDIF.",
+    "    CREATE OBJECT app_sub TYPE (classname).",
+    "    text = `calls zcl_in_a_sentence`. x = `zcl_name with more`. y = `z2ui5_cl_ui5_view_builder`.",
+    "    \" `zcl_in_a_comment`",
+  ].join("\n");
+  assert.deepEqual(instantiatedClasses(source).sort(), ["z2ui5_cl_smp_app_105", "zcl_sub_two"]);
 });
 
 test("the tables of the reader's own a source reads or writes - not SAP's, not a class, not a comment's", () => {

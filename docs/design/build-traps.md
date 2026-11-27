@@ -677,6 +677,17 @@ Most names are not there - they are in the framework corpus - and a link that
 failed because a helper could not be guessed at would be worse than one that
 opens what it can.
 
+**"The framework" is abap2UI5's own names, not every `z2ui5_` name.** The
+follow first dropped `/^z2ui5_/` as the framework's - and the samples are
+`z2ui5_` classes too. Every sample that calls a sibling (024 → 025, 468 → 469,
+531 → 532/533, …) opened alone, and 104 died on its first selection with "The
+class ??? does not exist" (abap2UI5/abap2UI5#3075). `ABAP2UI5` now names the
+framework by its own convention (a `ui5`/`ui5f` segment, the mirrored `ajson`
+and `srt`, `z2ui5_t_01`, the two public interfaces), and the corpus build
+fails when the pinned framework carries an object outside it. And 104 names
+its sub-apps only in literals, for `CREATE OBJECT ... TYPE (name)`, so a
+literal that is nothing but a y/z class name is followed as well.
+
 ### Findings from merging the output window into the panel
 
 **One panel at the bottom, five tabs.** The output window and the insight panel

@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { grouped, highlight, queryTerms, search } from "../../src/shell/search-engine.mjs";
+import { compare, SOURCE_URL } from "../../tools/check-search-engine.mjs";
 
 const ENTRIES = [
   { area: "docs", group: "Documentation", title: "Installation", text: "How to install abap2UI5 with abapGit.", headings: [["Requirements", "requirements"]] },
@@ -102,4 +103,16 @@ test("highlight marks what was matched, and nothing it was not", () => {
   assert.deepEqual(highlight("view_display", "view view_display"), [["view_display", true]]);
   assert.deepEqual(highlight("", "x"), [["", false]]);
   assert.deepEqual(highlight("text", ""), [["text", false]]);
+});
+
+// The copy against its source (tools/check-search-engine.mjs): the verdict,
+// never the network - fetch is handed in.
+test("the copy is compared with abap2UI5/docs' file: same, different, or not reached", async () => {
+  assert.match(SOURCE_URL, /^https:\/\/raw\.githubusercontent\.com\/abap2UI5\/docs\/main\/scripts\/lib\/search-engine\.js$/);
+  const serve = (text) => async () => ({ ok: true, status: 200, text: async () => text });
+  assert.equal((await compare({ fetchFn: serve("x"), copy: "x" })).verdict, "same");
+  assert.equal((await compare({ fetchFn: serve("x\n"), copy: "x" })).verdict, "different");
+  assert.equal((await compare({ fetchFn: async () => ({ ok: false, status: 404 }), copy: "x" })).verdict, "unreachable");
+  const offline = await compare({ fetchFn: async () => { throw new Error("offline"); }, copy: "x" });
+  assert.deepEqual(offline, { verdict: "unreachable", why: "offline" });
 });

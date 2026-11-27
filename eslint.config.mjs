@@ -73,6 +73,16 @@ export default [
     languageOptions: { globals: { ...globals.browser } },
   },
 
+  // abap2UI5/docs' scripts/lib/search-engine.js, byte for byte
+  // (tools/check-search-engine.mjs), so a finding in it is fixed over there and
+  // copied back, never here. Its one today - `let record = null;` assigned again
+  // inside the try - is that file's style, not a fault; every other rule still
+  // reads it, the browser globals above included.
+  {
+    files: ["src/shell/search-engine.mjs"],
+    rules: { "no-useless-assignment": "off" },
+  },
+
   // Plain scripts, not modules: the fetch interception injected into the app
   // frame before the UI5 bootstrap, and the embed loader a host page includes
   // with a <script> tag.

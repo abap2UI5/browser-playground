@@ -115,10 +115,22 @@ export function humanUrl(raw) {
 // Read off the text because there is no registry yet: this runs before the
 // corpus has even been fetched.
 //
-// Framework prefixes are dropped: those objects are in the corpus already, and
+// Framework names are dropped: those objects are in the corpus already, and
 // asking a sample repository for cl_abap_typedescr.clas.abap would be one
-// pointless 404 per name.
-const FRAMEWORK = /^(z2ui5_|cl_|cx_|if_|cf_)/i;
+// pointless 404 per name - and would spend one of the MAX_FOLLOWED slots.
+//
+// NOT EVERY z2ui5_ NAME, THOUGH. The samples are z2ui5_ classes too
+// (z2ui5_cl_smp_app_025, which 024 calls; 105 and 112, which 104 embeds), and
+// a bare /^z2ui5_/ dropped every one of them: the app opened alone and died
+// on the first call into its sibling (abap2UI5/abap2UI5#3075). abap2UI5's own
+// objects are told apart by the name abap2UI5 gives them - every one carries a
+// ui5/ui5f segment (its object-naming gate), but for the mirrored AJSON and
+// S-RTTI (ajson, srt), the draft table z2ui5_t_01 and the two public
+// interfaces. The corpus build (writeCorpus( ) in tools/build-site.mjs) holds
+// this against the pinned framework, so a new object there that does not fit
+// fails the build rather than a link.
+const FRAMEWORK = /^(cl_|cx_|if_|cf_)/i;
+export const ABAP2UI5 = /^z2ui5_(?:(?:cl|cx|if)_(?:ui5f?|ajson|srt)(?:_|$)|if_app$|if_client$|t_\d+$)/i;
 // Local classes and interfaces live in the file that declares them; there is
 // no sibling file of that name to ask for.
 const LOCAL = /^(lcl_|lif_|ltc_|lth_)/i;
@@ -136,7 +148,9 @@ const NOT_A_CLASS = /^(data|object|any|simple|clike|csequence|numeric|xsequence|
 export function instantiatedClasses(source) {
   const names = new Set();
   const add = (name) => {
-    if (name && !FRAMEWORK.test(name) && !LOCAL.test(name) && !NOT_A_CLASS.test(name)) names.add(name.toLowerCase());
+    if (name && !FRAMEWORK.test(name) && !ABAP2UI5.test(name) && !LOCAL.test(name) && !NOT_A_CLASS.test(name)) {
+      names.add(name.toLowerCase());
+    }
   };
   // Comments are stripped first, or the sentence "this app calls zcl_helper"
   // in a header comment would be followed as if it were code.
@@ -145,6 +159,14 @@ export function instantiatedClasses(source) {
   for (const [, name] of code.matchAll(/\bCREATE\s+OBJECT\s+\w+\s+TYPE\s+([a-z_]\w*)/gi)) add(name);
   for (const [, name] of code.matchAll(/\b([a-z_]\w*)\s*=>/gi)) add(name);
   for (const [, name] of code.matchAll(/\bTYPE\s+REF\s+TO\s+([a-z_]\w*)/gi)) add(name);
+  // A literal that is nothing but a class name of the reader's own: the
+  // target of CREATE OBJECT ... TYPE (name), which no pattern above can see -
+  // z2ui5_cl_smp_app_104 lists its sub-apps as `z2ui5_cl_smp_app_105` and
+  // starts them dynamically, and opened without them it fails with "The class
+  // ??? does not exist". Only the whole literal, and only a y/z class name,
+  // so a sentence that mentions one is not followed; a literal that names a
+  // class that is not there costs the one 404 any other name does.
+  for (const [, name] of code.matchAll(/[`']([yz](?:\w*_)?cl_\w+)[`']/gi)) add(name);
   return [...names];
 }
 

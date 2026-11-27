@@ -194,6 +194,28 @@ test("the tree pairs with the XML the linter reconstructs - or says where it doe
   assert.equal(alignWithXml(chain.root, "<not-xml"), "the reconstructed view is not XML");
 });
 
+test("a comment inside a template's embedded expression holds no brace", () => {
+  // `|…{ … }…|` whose expression runs over lines may carry a comment, and a
+  // `}` in it is the comment's: read as the expression's end, the template
+  // ended at that line, its closing `|` opened another, and the statement ran
+  // on into the chain below (the linter's scrub( ) reads it the same way)
+  const template =
+    "    DATA(hello) = |Hello { to_upper(\n" +
+    "      \" a } in a comment, and a | too\n" +
+    "* a line comment with a }\n" +
+    "      name ) }!|.\n";
+  const at = "    DATA(view) = z2ui5_cl_ui5_view_builder=>factory(";
+  const source = SOURCE.replace(at, template + at);
+  const chain = readViewChain(source);
+  assert.equal(chain.ok, true, chain.why);
+  const before = readViewChain(SOURCE);
+  const shape = (node) => [qnameOf(node), node.attrs.map((a) => `${a.name}=${a.raw}`), node.children.map(shape)];
+  assert.deepEqual(shape(chain.root.children[0]), shape(before.root.children[0]));
+  assert.equal(chain.start, before.start + template.length);
+  // the template is a literal whole, its comments with it: no comment in front of the chain
+  assert.equal(commentIn(source, source.indexOf(template) + template.length, chain.start), false);
+});
+
 test("comments are found where a rewrite would drop them, and only there", () => {
   const source = "DATA(x) = `a \" not a comment`. \" a comment\n* a line comment\nDATA(y) = 1.";
   assert.equal(commentIn(source, 0, source.indexOf(".") + 1), false);

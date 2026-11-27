@@ -816,7 +816,12 @@ export function createAgent({ apiKey, workspace, provider: settings, host, ui, s
       text = stopText(hit, watched);
     }
     await d.arm([]).catch(() => {});
-    if (hit) await d.resume().catch(() => {});
+    // Resumed whether or not a stop was seen: a hit that came after
+    // nextStop( ) gave up, but before the breakpoint was gone, holds the
+    // program with nobody listening, and `trigger` would never settle. The
+    // breakpoints are cleared first, so nothing stops after this; with
+    // nothing stopped, resume is a no-op (debug.mjs answers false).
+    await d.resume().catch(() => {});
     const after = await trigger;
     const how = event ? `the event ${event}` : "the run";
     if (!hit) {

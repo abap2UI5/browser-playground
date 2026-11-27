@@ -58,13 +58,15 @@ jobs:
     # with a follow-up message - and the build.
     timeout-minutes: 180
     env:
-      AI_EVAL_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      # whether there is a key, not the key: that reaches only the step that
+      # sends the tasks to the model - not the build's npm ci, not the summary
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
       AI_EVAL_SPEED: ${{ inputs.speed || 'balanced' }}
       AI_EVAL_ONLY: ${{ inputs.only || '' }}
       AI_EVAL_OUT: test-results/ai-eval.jsonl
     steps:
       - name: Without a key there is nothing to measure
-        if: env.AI_EVAL_KEY == ''
+        if: env.HAS_KEY != 'true'
         env:
           HOME_REPOSITORY: ${{ github.repository == 'abap2UI5/browser-playground' }}
           EVENT: ${{ github.event_name }}
@@ -78,22 +80,26 @@ jobs:
           fi
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: env.AI_EVAL_KEY != ''
+        if: env.HAS_KEY == 'true'
+        with:
+          persist-credentials: false
       - uses: ./.github/actions/build
-        if: env.AI_EVAL_KEY != ''
+        if: env.HAS_KEY == 'true'
 
       # A task that did not end clean fails its test; that is the finding,
       # not a broken job - the summary below says which.
       - name: Have the model build the apps
-        if: env.AI_EVAL_KEY != ''
+        if: env.HAS_KEY == 'true'
+        env:
+          AI_EVAL_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: npm test -- ai-eval --project=chromium --workers=1 || true
 
       - name: Summary
-        if: env.AI_EVAL_KEY != ''
+        if: env.HAS_KEY == 'true'
         run: node tools/ai-eval-summary.mjs "$AI_EVAL_OUT" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always() && env.AI_EVAL_KEY != ''
+        if: always() && env.HAS_KEY == 'true'
         with:
           name: ai-eval
           path: |

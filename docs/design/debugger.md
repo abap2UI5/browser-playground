@@ -235,7 +235,12 @@ stop (`studioDebugger( )` in `agent-hooks.mjs`), reads the frame and the
 answers with the stack, the values and what the run or the event did after
 (`stopText( )` in `ai-agent.mjs`). A line the last build cannot stop at is
 refused with the lines nearby that it can. Nothing stays stopped whatever
-happens. `tests/ai.spec.js` holds it.
+happens: the breakpoint is cleared and then `resume` is sent whether a stop
+was seen or not, because a hit that lands after the wait gave up but
+before the clear holds the program with nobody listening (a resume with
+nothing stopped is a no-op). `tests/ai.spec.js` holds the stop; that race
+is too narrow for a test to provoke, and `ai-agent.mjs` does not load in
+node (it imports the guide's markdown from `deps/` and the SDK).
 
 ## Deliberate limits
 

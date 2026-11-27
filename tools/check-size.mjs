@@ -86,8 +86,16 @@ const TRANSFERRED = [
    * files of their own beside each rule that only `./rule-docs` imports, so
    * lint.mjs is 192,270 bytes (0.18 MB) and the two files together 832,721
    * (0.79 MB, registry.mjs 640,451). What 0.11.0 still adds over 0.9.0 is
-   * 0.10.0's new rules. */
-  { file: "editor/*.mjs", limit: 0.85 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
+   * 0.10.0's new rules.
+   *
+   * 0.85 -> 0.88 MB with @abaplint/core 2.120.103 -> 2.120.122 and the
+   * transpiler 2.14.29 -> 2.14.41: registry.mjs 640,451 -> 704,405 bytes
+   * compressed, lint.mjs unchanged at 192,272 - 0.855 MB together, 5 KB over
+   * the old line. Taken for CX_SY_CREATE_OBJECT_ERROR carrying the class
+   * name (abap2UI5/abap2UI5#3075), and core had to follow: 2.14.41 asks for
+   * ^2.120.121, and against the old pin npm nested a second core in the
+   * worker. 0.88 leaves 26 KB, not a release's worth of growth. */
+  { file: "editor/*.mjs", limit: 0.88 * MB, note: "abaplint, the transpiler and the abap2UI5 linter, in the registry worker" },
   { file: "runtime/framework.mjs", limit: 0.8 * MB, note: "abap2UI5 and open-abap, transpiled" },
   /* 0.60 until the pin bump to abap2UI5@4e0f3a01: the framework grew by
    * z2ui5_cl_ui5_llm_guide (a thousand lines) and the corpus to 0.61 MB.
